@@ -1,0 +1,4 @@
+*.db
+*Release*/
+*.vs*/
+*Debug*/
