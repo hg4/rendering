@@ -21,5 +21,45 @@
     <ClCompile Include="glad.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image_write.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\shader\test_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\test_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
