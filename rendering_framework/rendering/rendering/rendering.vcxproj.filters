@@ -47,6 +47,15 @@
     <ClInclude Include="stb_image_write.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Geometry.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureLoader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shader\test_shader.fs">
@@ -59,6 +68,48 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="..\resources\shader\shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\heightmap_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\heightmap_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shadow_mapping.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shadow_mapping_depth.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shadow_mapping_depth.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\shadow_mapping.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\pbr_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\cubemap_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\cubemap_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\envmap_preshader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\cube_generator.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\cube_generator.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\envmap_spec_prefilter.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\lut_preshader.fs">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

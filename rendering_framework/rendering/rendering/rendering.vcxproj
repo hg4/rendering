@@ -133,15 +133,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stb_image_write.h" />
+    <ClInclude Include="TextureLoader.h" />
+    <ClInclude Include="WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\resources\shader\cube_generator.fs" />
+    <None Include="..\resources\shader\cube_generator.vs" />
+    <None Include="..\resources\shader\cubemap_shader.fs" />
+    <None Include="..\resources\shader\cubemap_shader.vs" />
+    <None Include="..\resources\shader\envmap_preshader.fs" />
+    <None Include="..\resources\shader\envmap_spec_prefilter.fs" />
+    <None Include="..\resources\shader\heightmap_shader.fs" />
+    <None Include="..\resources\shader\heightmap_shader.vs" />
+    <None Include="..\resources\shader\lut_preshader.fs" />
+    <None Include="..\resources\shader\pbr_shader.fs" />
     <None Include="..\resources\shader\shader.fs" />
     <None Include="..\resources\shader\shader.vs" />
+    <None Include="..\resources\shader\shadow_mapping.fs" />
+    <None Include="..\resources\shader\shadow_mapping.vs" />
+    <None Include="..\resources\shader\shadow_mapping_depth.fs" />
+    <None Include="..\resources\shader\shadow_mapping_depth.vs" />
     <None Include="..\resources\shader\test_shader.fs" />
     <None Include="..\resources\shader\test_shader.vs" />
   </ItemGroup>

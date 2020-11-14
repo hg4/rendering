@@ -12,12 +12,16 @@ enum Camera_Movement {
 	FORWARD,
 	BACKWARD,
 	LEFT,
-	RIGHT
+	RIGHT,
+	UP,
+	DOWN
 };
 
+
 // Default camera values
-const float YAW = -90.0f;
+const float YAW = 0.0f;
 const float PITCH = 0.0f;
+const float HEAD = 0.0f;
 const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
@@ -34,29 +38,37 @@ public:
 	glm::vec3 Right;
 	glm::vec3 WorldUp;
 	// euler Angles
-	float Yaw;
-	float Pitch;
+	float Pitch;		//around x
+	float Head;		//around y
+	//float Yaw;
+
+	float Roll;		//around z
 	// camera options
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
 
 	// constructor with vectors
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+	//default:默认相机初始朝向正z,pitch=head=roll=0.0f
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3 worldup = glm::vec3(0.0f, 1.0f, 0.0f), float head = HEAD, float pitch = PITCH,float roll=0.0) : Front(glm::vec3(0.0f, 0.0f, 1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
 		Position = position;
-		WorldUp = up;
-		Yaw = yaw;
+		WorldUp = worldup;
+		Head = head;
+		//Yaw = yaw;
 		Pitch = pitch;
+		Roll = roll;
 		updateCameraVectors();
 	}
 	// constructor with scalar values
-	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float head, float pitch,float roll=0.0) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);
-		Yaw = yaw;
+		//Yaw = yaw;
+		Head = head;
 		Pitch = pitch;
+		Roll = roll;
 		updateCameraVectors();
 	}
 
@@ -78,6 +90,10 @@ public:
 			Position -= Right * velocity;
 		if (direction == RIGHT)
 			Position += Right * velocity;
+		if (direction == UP)
+			Position += Up * velocity;
+		if (direction == DOWN)
+			Position -= Up * velocity;
 	}
 
 	// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -86,20 +102,22 @@ public:
 		xoffset *= MouseSensitivity;
 		yoffset *= MouseSensitivity;
 
-		Yaw += xoffset;
+		Head += xoffset;
 		Pitch += yoffset;
 
 		// make sure that when pitch is out of bounds, screen doesn't get flipped
 		if (constrainPitch)
 		{
-			if (Pitch > 89.0f)
-				Pitch = 89.0f;
-			if (Pitch < -89.0f)
-				Pitch = -89.0f;
+			if (Head > 179.0f)
+				Head = 179.0f;
+			if (Head < -179.0f)
+				Head = -179.0f;
 		}
 
 		// update Front, Right and Up Vectors using the updated Euler angles
 		updateCameraVectors();
+		//updateCameraVectors(xoffset, Up);
+		//updateCameraVectors(yoffset, Right);
 	}
 
 	// processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -111,6 +129,24 @@ public:
 		if (Zoom > 45.0f)
 			Zoom = 45.0f;
 	}
+	void updateCameraVectors(float theta, vec3 u) {
+		glm::quat q;
+		theta = glm::radians(theta/2);
+		float cos_theta = cos(theta);
+		float sin_theta = sin(theta);
+		u *= sin_theta;
+		q.w = cos_theta;
+		q.x = u.x;
+		q.y = u.y;
+		q.z = u.z;
+		Front = glm::normalize(quat_mul(q, Front));
+		Right = glm::normalize(quat_mul(q, Right));
+		Up = glm::normalize(quat_mul(q, Up));
+		Head = atan2(Right.z, Front.z);
+		Pitch = asin(Up.z);
+		Roll = atan2(-Up.x, -Up.y);
+		printf("head:%.2f, Pitch:%.2f, Roll:%.2f\n", Head, Pitch, Roll);
+	}
 
 private:
 	// calculates the front vector from the Camera's (updated) Euler Angles
@@ -118,13 +154,32 @@ private:
 	{
 		// calculate the new Front vector
 		glm::vec3 front;
-		front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+		float cosh = cos(glm::radians(Head));
+		float sinh = sin(glm::radians(Head));
+		float cosp = cos(glm::radians(Pitch));
+		float sinp = sin(glm::radians(Pitch));
+		float cosr = cos(glm::radians(Roll));
+		float sinr = sin(glm::radians(Roll));
+	/*	glm::mat4x4 m(cosr*cosh-sinr*sinp*sinh,-sinr*cosp,cosr*sinh+sinr*sinp*cosh,0,
+									sinr*cosh+cosr*sinp*sinh,cosr*cosp,sinr*sinh-cosr*sinp*cosh,0,
+									-cosp*sinh,							sinp,					cosp*cosh,				 0,
+									0,0,0,1);*/
+		front.x = cosr*sinh + sinr*sinp*cosh;
+		front.y = sinr*sinh - cosr*sinp*cosh;
+		front.z = cosp*cosh;
+	/*	front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 		front.y = sin(glm::radians(Pitch));
-		front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+		front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));*/
 		Front = glm::normalize(front);
 		// also re-calculate the Right and Up vector
 		Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 		Up = glm::normalize(glm::cross(Right, Front));
+	}
+
+	vec3 quat_mul(quat q, vec3 v) {
+		quat q_star = quat(q.w, vec3(-q.x, -q.y, -q.z));
+		quat mq = q*quat(0.0,v)*q_star;
+		return vec3(mq.x, mq.y, mq.z);
 	}
 };
 #endif
