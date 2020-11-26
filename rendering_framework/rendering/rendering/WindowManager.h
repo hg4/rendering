@@ -26,6 +26,9 @@ public:
 		camera_ = new Camera(cam_pos);
 		callbackRegister();
 	}
+	~WindowManager() {
+		delete camera_;
+	}
 	typedef void(*mainloop)(void);
 	void WindowLoop(mainloop) {
 		while (!glfwWindowShouldClose(window_)) {
@@ -110,6 +113,7 @@ private:
 		glfwSetScrollCallback(window_, scroll_callback);
 	}
 };
+
 Camera* WindowManager::camera_ = NULL;
 bool WindowManager::firstMouse_=true;
 float WindowManager::lastX_ = 0.0;

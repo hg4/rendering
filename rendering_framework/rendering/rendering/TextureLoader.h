@@ -1,21 +1,47 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glad/glad.h>
 #include <iostream>
 #include <vector>
+#include "Texture.h"
 
 class TextureLoader {
 public:
+	static Texture genEmptyTexture2D(int width, int height, string texture_name, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding, bool useMipmap);
+	static unsigned int genEmptyTexture2D(int width, int height, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding = GL_CLAMP_TO_EDGE, bool useMipmap = false);
+	static Texture genEmptyTextureCubeMap(int width, int height, string texture_name, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding, bool useMipmap);
+	static unsigned int genEmptyTextureCubeMap(int width, int height, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding = GL_CLAMP_TO_EDGE, bool useMipmap = false);
+	static Texture loadTexture2D(const char * path, std::string texture_name,
+		GLenum data_type, bool useMipmap, GLenum tex_surrounding);
+	static unsigned int loadTexture2D(const char * path,
+		GLenum data_type = GL_UNSIGNED_BYTE, bool useMipmap = true, GLenum tex_surrounding = GL_REPEAT);
+	static Texture loadTextureCubeMap(std::vector<std::string> texture_faces_path, std::string texture_name,
+		GLenum data_type, bool useMipmap, GLenum tex_surrounding);
+	static unsigned int loadTextureCubeMap(std::vector<std::string> texture_faces_path,
+		GLenum data_type = GL_UNSIGNED_BYTE, bool useMipmap = true, GLenum tex_surrounding = GL_CLAMP_TO_EDGE);
+	/*static Texture genEmptyTexture2D(int width, int height, string texture_name, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding, bool useMipmap) {
+		unsigned int id=genEmptyTexture2D(width, height, data_format, data_type, tex_surrounding, useMipmap);
+		return Texture(id, texture_name, GL_TEXTURE_2D);
+	}
 	static unsigned int genEmptyTexture2D(int width, int height, GLenum data_format, GLenum data_type,
 		GLenum tex_surrounding = GL_CLAMP_TO_EDGE, bool useMipmap = false) {
 		unsigned int textureID = genTextures(GL_TEXTURE_2D);
 		GLenum texture_format = getTexFormat(data_format, data_type);
 		bindTextures(width, height, texture_format, data_format, nullptr, GL_TEXTURE_2D, data_type, tex_surrounding, useMipmap);
 		return textureID;
+	}
+	static Texture genEmptyTextureCubeMap(int width, int height,string texture_name, GLenum data_format, GLenum data_type,
+		GLenum tex_surrounding, bool useMipmap) {
+		unsigned int id = genEmptyTextureCubeMap(width, height, data_format, data_type, tex_surrounding, useMipmap);
+		return Texture(id, texture_name, GL_TEXTURE_CUBE_MAP);
 	}
 	static unsigned int genEmptyTextureCubeMap(int width,int height,GLenum data_format,GLenum data_type, 
 		GLenum tex_surrounding = GL_CLAMP_TO_EDGE,bool useMipmap=false) {
@@ -26,7 +52,13 @@ public:
 		}
 		return textureID;
 	}
-	static unsigned int loadTexture2D(const char * path, GLenum data_type = GL_UNSIGNED_BYTE, bool useMipmap=true,GLenum tex_surrounding = GL_REPEAT  ) {
+	static Texture loadTexture2D(const char * path, std::string texture_name,
+		GLenum data_type, bool useMipmap, GLenum tex_surrounding) {
+		unsigned int id = loadTexture2D(path, data_type, useMipmap, tex_surrounding);
+		return Texture(id, texture_name, GL_TEXTURE_2D);
+	}
+	static unsigned int loadTexture2D(const char * path,
+		GLenum data_type = GL_UNSIGNED_BYTE, bool useMipmap=true,GLenum tex_surrounding = GL_REPEAT  ) {
 		unsigned int textureID;
 		GLenum	texture_format, data_format;
 		int width, height;
@@ -37,6 +69,11 @@ public:
 		bindTextures(width, height, texture_format, data_format, data, GL_TEXTURE_2D, data_type, useMipmap,tex_surrounding);
 		stbi_image_free(data);
 		return textureID;
+	}
+	static Texture loadTextureCubeMap(std::vector<std::string> texture_faces_path, std::string texture_name,
+		GLenum data_type, bool useMipmap, GLenum tex_surrounding) {
+		unsigned int id = loadTextureCubeMap(texture_faces_path, data_type, useMipmap, tex_surrounding);
+		return Texture(id, texture_name, GL_TEXTURE_CUBE_MAP);
 	}
 	static unsigned int loadTextureCubeMap(std::vector<std::string> texture_faces_path, 
 		GLenum data_type = GL_UNSIGNED_BYTE, bool useMipmap = true, GLenum tex_surrounding = GL_CLAMP_TO_EDGE) {
@@ -53,33 +90,34 @@ public:
 			stbi_image_free(data);
 		}
 		return textureID;
-	}
+	}*/
 private:
-	static void * loadTextureData(const char * path, GLenum data_type, GLenum &data_format, int &width, int &height) {
-		int  nrComponents;
-		void *data = NULL;
-		stbi_set_flip_vertically_on_load(true);
-		if (data_type == GL_UNSIGNED_BYTE) {
-			data = stbi_load(path, &width, &height, &nrComponents, 0);
-		}
-		else if (data_type == GL_FLOAT) {
-			data=stbi_loadf(path, &width, &height, &nrComponents, 0);
-		}
-		if (data)
-		{
-			if (nrComponents == 1)
-				data_format = GL_RED;
-			else if (nrComponents == 3)
-				data_format = GL_RGB;
-			else if (nrComponents == 4)
-				data_format = GL_RGBA;
-		}
-		else {
-			std::cout << "Texture failed to load at path: " << path << std::endl;
-			stbi_image_free(data);
-		}
-		return data;
-	}
+	static void * loadTextureData(const char * path, GLenum data_type, GLenum &data_format, int &width, int &height);
+	//static void * loadTextureData(const char * path, GLenum data_type, GLenum &data_format, int &width, int &height) {
+	//	int  nrComponents;
+	//	void *data = NULL;
+	//	stbi_set_flip_vertically_on_load(true);
+	//	if (data_type == GL_UNSIGNED_BYTE) {
+	//		data = stbi_load(path, &width, &height, &nrComponents, 0);
+	//	}
+	//	else if (data_type == GL_FLOAT) {
+	//		data=stbi_loadf(path, &width, &height, &nrComponents, 0);
+	//	}
+	//	if (data)
+	//	{
+	//		if (nrComponents == 1)
+	//			data_format = GL_RED;
+	//		else if (nrComponents == 3)
+	//			data_format = GL_RGB;
+	//		else if (nrComponents == 4)
+	//			data_format = GL_RGBA;
+	//	}
+	//	else {
+	//		std::cout << "Texture failed to load at path: " << path << std::endl;
+	//		stbi_image_free(data);
+	//	}
+	//	return data;
+	//}
 	static GLenum getTexFormat(GLenum data_format,GLenum data_type) {
 		if (data_format == GL_RGB&&data_type == GL_UNSIGNED_BYTE) return GL_RGB;
 		if (data_format == GL_RGB&&data_type == GL_FLOAT) return GL_RGB16F;
