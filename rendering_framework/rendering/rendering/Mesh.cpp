@@ -67,7 +67,7 @@ void Mesh::draw()
 void Mesh::init()
 {
 	if (_useEBO) 
-		_be=BufferManager::genBindEBOBuffer(&vertices[0], vertices.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(Vertex));
+		_be=BufferManager::genBindEBOBuffer(&vertices[0], vertices.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int));
 	else _be=BufferManager::genBindVAOBuffer(&vertices[0], vertices.size() * sizeof(Vertex));
 	//unsigned int VAO, VBO, EBO=0;
 	//glGenVertexArrays(1, &VAO);
