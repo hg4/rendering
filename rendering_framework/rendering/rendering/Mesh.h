@@ -21,6 +21,7 @@ public:
 		vertices = _v;
 		indices = _i;
 		material->textureList = _t;
+		_vertex_number = _v.size();
 		init();
 	}
 	//只能用于三角形类型的接口，不能画line

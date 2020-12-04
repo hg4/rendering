@@ -48,7 +48,7 @@ bool pbr_env_on = true;
 
 //obj
 Mesh material_sphere,background_cube;
-
+Model * m;
 MVPTransform* genMVP() {
 	glm::mat4 model = glm::mat4(1.0);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -217,6 +217,20 @@ int main()
 	string model_path = "./model/" + model_name;
 	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str());
 
+	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
+	m = new Model(gunModel);
+	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
+	Texture texture_metallic = TextureLoader::loadTexture2D((texture_path + "/Cerberus_M.tga").c_str(),"texture_metallic", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
+	Texture texture_roughness = TextureLoader::loadTexture2D((texture_path + "/Cerberus_R.tga").c_str(), "texture_roughness", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
+	Texture texture_ao = TextureLoader::loadTexture2D((texture_path + "/Cerberus_AO.tga").c_str(), "texture_ao", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
+	Texture texture_albedo = TextureLoader::loadTexture2D((texture_path + "/Cerberus_A.tga").c_str(), "texture_albedo", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
+	m->meshes[0].material->textureList.clear();
+	m->meshes[0].addTexture(texture_metallic.id, texture_metallic.name_in_shader, texture_metallic.texture_type);
+	m->meshes[0].addTexture(texture_roughness.id, texture_roughness.name_in_shader, texture_roughness.texture_type);
+	m->meshes[0].addTexture(texture_ao.id, texture_ao.name_in_shader, texture_ao.texture_type);
+	m->meshes[0].addTexture(texture_albedo.id, texture_albedo.name_in_shader, texture_albedo.texture_type);
+
+
 	MVPTransform * mvp = genMVP();
 	unsigned int envCubemap = genEnvmapFBO(mvp);
 	unsigned int irradianceMap = genIrradianceMap(mvp,envCubemap);
@@ -229,6 +243,10 @@ int main()
 	material_sphere.addTexture(irradianceMap, "irradianceMap", GL_TEXTURE_CUBE_MAP);
 	material_sphere.addTexture(prefilterMap, "prefilterMap", GL_TEXTURE_CUBE_MAP);
 	material_sphere.addTexture(brdfLUT, "brdfLUT", GL_TEXTURE_2D);
+
+	m->meshes[0].addTexture(irradianceMap, "irradianceMap", GL_TEXTURE_CUBE_MAP);
+	m->meshes[0].addTexture(prefilterMap, "prefilterMap", GL_TEXTURE_CUBE_MAP);
+	m->meshes[0].addTexture(brdfLUT, "brdfLUT", GL_TEXTURE_2D);
 
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
@@ -250,6 +268,7 @@ int main()
 		glm::mat4 view = window_manager->camera_->GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		material_sphere.setMVP(mat4(1.0), view, projection);
+		m->meshes[0].setMVP(mat4(1.0), view, projection);
 	/*	shader.setUniform("view", view);
 		shader.setUniform("projection", projection);*/
 		shader.setUniform("viewPos", window_manager->camera_->Position);
@@ -279,8 +298,8 @@ void renderScene(Shader &shader)
 	// floor
 	glm::mat4 model = glm::mat4(1.0f);
 	shader.setUniform("model", model);
-
-	material_sphere.draw(shader);
+	m->Draw(shader);
+	//material_sphere.draw(shader);
 }
 
 
