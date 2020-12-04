@@ -150,21 +150,7 @@ private:
 		// diffuse: texture_diffuseN
 		// specular: texture_specularN
 		// normal: texture_normalN
-		cout << "NONE:" << material->GetTextureCount(aiTextureType_NONE)<<endl;
-		cout << "diffuse:" << material->GetTextureCount(aiTextureType_DIFFUSE) << endl;
-		cout << "shininess:" << material->GetTextureCount(aiTextureType_SHININESS) << endl;
-		cout << "ambient:" << material->GetTextureCount(aiTextureType_AMBIENT) << endl;
-		cout << "normals:" << material->GetTextureCount(aiTextureType_NORMALS) << endl;
-		cout << "emisive:" << material->GetTextureCount(aiTextureType_EMISSIVE) << endl;
-		cout << "lightmap:" << material->GetTextureCount(aiTextureType_LIGHTMAP) << endl;
-		cout << "reflection:" << material->GetTextureCount(aiTextureType_REFLECTION) << endl;
-		cout << "displacement:" << material->GetTextureCount(aiTextureType_DISPLACEMENT) << endl;
-		cout << "opacity:" << material->GetTextureCount(aiTextureType_OPACITY) << endl;
-		cout << "unknown:" << material->GetTextureCount(aiTextureType_UNKNOWN) << endl;
-		for (int i = 0; i < material->mNumProperties; i++) {
-			aiMaterialProperty * materialPtr = material->mProperties[i];
-			cout << materialPtr->mSemantic << endl;
-		}
+
 		// 1. diffuse maps
 		vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());

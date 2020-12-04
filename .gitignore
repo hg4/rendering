@@ -7,5 +7,3 @@
 *.vcxproj
 rendering_framework/rendering/libraries/Libs/glfw3.lib
 
-*.zip
-*.opendb
