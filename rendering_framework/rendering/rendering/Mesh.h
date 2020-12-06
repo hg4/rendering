@@ -26,15 +26,15 @@ public:
 	}
 	//只能用于三角形类型的接口，不能画line
 	Mesh(float * _pos, float *_norm, float *_tex, int _length) :Mesh(_pos,_norm,_tex,_length,false,NULL,0,GL_TRIANGLES){
-		material = new PbrMaterial();
+		material = new Material();
 	}
 	Mesh(float * _pos, float *_norm, float *_tex, int _length, unsigned int * _indices, int _indice_length) :
 		Mesh(_pos, _norm, _tex, _length, true, _indices, _indice_length, GL_TRIANGLES) {
-		material = new PbrMaterial();
+		material = new Material();
 	}
 	Mesh(float * _pos, float *_norm, float *_tex,int _length, 
 		bool _use_ebo , unsigned int * _indices , int _indices_length,GLenum _gl_type){
-		material = new PbrMaterial();
+		material = new Material();
 		_useEBO = _use_ebo;
 		_primitiveType = _gl_type;
 		_vertex_number = _length / 3;
@@ -68,7 +68,7 @@ public:
 		int _indices_length, 
 		GLenum _gl_type) 
 	{
-		material = new PbrMaterial();
+		material = new Material();
 		_useEBO = _use_ebo;
 		_primitiveType = _gl_type;
 		_vertex_number = _length / _vertex_size;
@@ -92,7 +92,7 @@ public:
 		int _length,
 		int _vertex_size) :Mesh(_vertices, _length, _vertex_size, false, nullptr, 0, GL_TRIANGLES) 
 	{
-		material = new PbrMaterial();
+		material = new Material();
 	}
 
 	Mesh(vector<float>& _vertices,
@@ -101,13 +101,13 @@ public:
 		GLenum _gl_type) 
 		:Mesh(_vertices.data(), _vertices.size(), _vertex_size, true, _indices.data(), _indices.size(), _gl_type)
 	{
-		material = new PbrMaterial();
+		material = new Material();
 	}
 
 	Mesh(vector<float> &_vertices,
 		int _vertex_size) :Mesh(_vertices, _vertex_size, vector<unsigned int>(), GL_TRIANGLES) 
 	{
-		material = new PbrMaterial();
+		material = new Material();
 	}
 	void setMVP(mat4 model, mat4 view, mat4 projection) {
 		mvp = MVPTransform(model, view, projection);
@@ -125,6 +125,7 @@ public:
 	//vector<Texture> textures;
 	Material * material;
 	MVPTransform mvp;
+	Transform transform;
 private:
 	bool _useEBO;
 	GLenum _primitiveType;

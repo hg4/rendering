@@ -7,7 +7,7 @@
 void Mesh::setMaterial(Material * mtr)
 {
 	material = mtr;
-	cout << mtr->textureList.size() << " " << material->textureList.size() << endl;
+	/*cout << mtr->textureList.size() << " " << material->textureList.size() << endl;*/
 }
 
 void Mesh::addTexture(unsigned int  _id, string _name,GLenum _type)
@@ -58,6 +58,8 @@ void Mesh::draw(Shader &shader)
 
 void Mesh::draw()
 {
+	material->shader->setMVPTransform(mvp);
+	material->ActiveMaterialInShader();
 	glBindVertexArray(_be->VAO);
 	if (_useEBO) glDrawElements(_primitiveType, indices.size(), GL_UNSIGNED_INT, 0);
 	else glDrawArrays(_primitiveType, 0, _vertex_number);

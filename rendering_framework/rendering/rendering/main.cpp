@@ -10,7 +10,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "BufferManager.h"
 #include "Geometry.h"
+#include "SkyboxMaterial.h"
+#include "PbrEnvMaterial.h"
 #include "WindowManager.h"
+#include "MaterialList.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 using namespace std;
@@ -49,148 +52,28 @@ bool pbr_env_on = true;
 //obj
 Mesh material_sphere,background_cube;
 Model * m;
-MVPTransform* genMVP() {
-	glm::mat4 model = glm::mat4(1.0);
-	glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	glm::mat4 views[] =
-	{
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-	};
-	MVPTransform * mvp_arr = new MVPTransform[6];
-	for (int i = 0; i < 6; i++) {
-		mvp_arr[i] = MVPTransform(model, views[i], projection);
-	}
-	return mvp_arr;
+
+void PrintVec4(const vec4& ans){
+	cout << ans[0] << " " << ans[1] << " " << ans[2]<<" " <<ans[3]<< endl;
+}
+void PrintMat4(const mat4& mat) {
+	cout << "mat4*4:\n";
+	cout << mat[0][0] << " " << mat[1][0] <<" "<< mat[2][0] << " " << mat[3][0] << endl;
+	cout << mat[0][1] << " " << mat[1][1] << " " << mat[2][1] << " " << mat[3][1] << endl;
+	cout << mat[0][2] << " " << mat[1][2] << " " << mat[2][2] << " " << mat[3][2] << endl;
+	cout << mat[0][3] << " " << mat[1][3] << " " << mat[2][3] << " " << mat[3][3] << endl;
 }
 
-unsigned int genEnvmapFBO(MVPTransform * mvp) {
-	BufferElement * be = BufferManager::genBindFRBOBuffer(512, 512);
-	Shader equirectangularToCubemapShader("./shader/cube_generator.vs", "./shader/cube_generator.fs");
-
-	//加载hdr数据纹理
-	//unsigned int hdrTexture = loadTexture("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr",true);
-	Texture hdr = TextureLoader::loadTexture2D("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr",
-																								"equirectangularMap",
-																								GL_FLOAT,
-																								false,
-																								GL_CLAMP_TO_EDGE
-																								);
-	unsigned int hdrTexture=hdr.id;
-	//分配cubemap的缓冲
-	unsigned int envCubemap=TextureLoader::genEmptyTextureCubeMap(512,512,GL_RGB,GL_FLOAT,GL_CLAMP_TO_EDGE,false);
-	// ----------------------------------------------------------------------------------------------
-	// pbr: convert HDR equirectangular environment map to cubemap equivalent
-	// ----------------------------------------------------------------------
-	equirectangularToCubemapShader.use();
-	//equirectangularToCubemapShader.setUniform("equirectangularMap", 0);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, hdrTexture);
-	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
-	glBindFramebuffer(GL_FRAMEBUFFER, be->FBO);
-	Mesh cube = Geometry::createCube();
-	cube.addTexture(hdr.id, hdr.name_in_shader, GL_TEXTURE_2D);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		cube.setMVP(mvp[i]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		cube.draw(equirectangularToCubemapShader);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return envCubemap;
-}
-//todo: material and pbr preprocess
-unsigned int genPrefilterMap(MVPTransform * mvp,unsigned int envCubemap) {
-	unsigned int prefilterMap=TextureLoader::genEmptyTextureCubeMap(128,128,GL_RGB,GL_FLOAT,GL_CLAMP_TO_EDGE,true);
-	unsigned int FBO=BufferManager::genBindFBOBuffer();
-	unsigned int RBO;
-	Shader prefilterShader("./shader/cube_generator.vs", "./shader/envmap_spec_prefilter.fs");
-	prefilterShader.use();
-	Mesh cube = Geometry::createCube();
-	cube.addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
-	unsigned int maxMipLevels = 5;
-	for (int mip = 0; mip < maxMipLevels; mip++) {
-		int mipWidth = 128 * pow(0.5,mip);
-		int mipHeight = 128 * pow(0.5, mip);
-		RBO = BufferManager::genBindRBOBuffer(mipHeight, mipWidth);
-		glViewport(0, 0, mipWidth, mipHeight);
-		float roughness = (float)mip / (float)(maxMipLevels - 1);
-		prefilterShader.setUniform("roughness", roughness);
-		for (int i = 0; i < 6; i++) {
-			cube.setMVP(mvp[i]);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube.draw(prefilterShader);
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return prefilterMap;
-}
-unsigned int genIrradianceMap(MVPTransform *mvp,unsigned int envCubemap) {
-	BufferElement* be=BufferManager::genBindFRBOBuffer(32, 32);
-	unsigned int irradianceMap=TextureLoader::genEmptyTextureCubeMap(32,32,GL_RGB,GL_FLOAT,GL_CLAMP_TO_EDGE,false);
-	Shader irradianceShader("./shader/cube_generator.vs", "./shader/envmap_preshader.fs");
-	irradianceShader.use();
-	glViewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
-	Mesh cube = Geometry::createCube();
-	cube.addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
-	for (unsigned int i = 0; i < 6; ++i)
-	{
-		cube.setMVP(mvp[i]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		cube.draw(irradianceShader);
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	return irradianceMap;
-}
-unsigned int genLUT() {
-	
-	BufferManager::genBindFRBOBuffer(512, 512);
-	Shader LUTShader("./shader/shader.vs", "./shader/lut_preshader.fs");
-	unsigned int brdfLUT=TextureLoader::genEmptyTexture2D(512,512,GL_RG,GL_FLOAT,GL_CLAMP_TO_EDGE,false);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT, 0);
-	glViewport(0, 0, 512, 512);
-	LUTShader.use();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	Mesh quad=Geometry::createQuad();
-	quad.draw();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return brdfLUT;
-}
-unsigned int  genDepthFBO() {
-	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-	unsigned int depthMapFBO;
-	glGenFramebuffers(1, &depthMapFBO);
-	// create depth texture
-	unsigned int depthMap;
-	glGenTextures(1, &depthMap);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-	// attach depth texture as FBO's depth buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return depthMap;
+void ShowFPS() {
+	float currentFrame = glfwGetTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+	float fps = 1.0 / deltaTime;
+	printf("fps:%.2f\n", fps);
 }
 int main()
 {
-	 window_manager = new WindowManager(1024, 1024, vec3(0.0, 0.0, -3.0));
+	 window_manager = new WindowManager(1024, 1024, vec3(0.0f, 0.0f, 80.0f));
 	GLFWwindow * window = window_manager->getWindow();
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -213,50 +96,47 @@ int main()
 	// load textures
 	// -------------
 
-	string model_name = "bamboo-wood-semigloss";
+	string model_name = "bamboo_wood_semigloss";
 	string model_path = "./model/" + model_name;
-	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str());
+	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str(),"png");
 
 	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
 	m = new Model(gunModel);
 	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
-	Texture texture_metallic = TextureLoader::loadTexture2D((texture_path + "/Cerberus_M.tga").c_str(),"texture_metallic", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
-	Texture texture_roughness = TextureLoader::loadTexture2D((texture_path + "/Cerberus_R.tga").c_str(), "texture_roughness", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
-	Texture texture_ao = TextureLoader::loadTexture2D((texture_path + "/Cerberus_AO.tga").c_str(), "texture_ao", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
-	Texture texture_albedo = TextureLoader::loadTexture2D((texture_path + "/Cerberus_A.tga").c_str(), "texture_albedo", GL_UNSIGNED_BYTE, true, GL_CLAMP_TO_EDGE);
+	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
+	SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
+	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox);
+	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
+	MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
 	m->meshes[0].material->textureList.clear();
-	m->meshes[0].addTexture(texture_metallic.id, texture_metallic.name_in_shader, texture_metallic.texture_type);
-	m->meshes[0].addTexture(texture_roughness.id, texture_roughness.name_in_shader, texture_roughness.texture_type);
-	m->meshes[0].addTexture(texture_ao.id, texture_ao.name_in_shader, texture_ao.texture_type);
-	m->meshes[0].addTexture(texture_albedo.id, texture_albedo.name_in_shader, texture_albedo.texture_type);
-
-
-	MVPTransform * mvp = genMVP();
-	unsigned int envCubemap = genEnvmapFBO(mvp);
-	unsigned int irradianceMap = genIrradianceMap(mvp,envCubemap);
-	unsigned int prefilterMap = genPrefilterMap(mvp,envCubemap);
-	unsigned int brdfLUT = genLUT();
+	//m->meshes[0].setMaterial(gunPbrMaterial);
+	
+	//pbrMaterial->BindShader(shader);
+	mtrList->BindShader(shader);
+	mtrlist0->BindShader(shader);
 	background_cube=Geometry::createCube();
-	background_cube.addTexture(envCubemap, "envCubemap", GL_TEXTURE_CUBE_MAP);
+	//background_cube.addTexture(envCubemap, "envCubemap", GL_TEXTURE_CUBE_MAP);
+	background_cube.setMaterial(skybox);
+	background_cube.material->BindShader(backgroundShader);
 	material_sphere = Geometry::createSphere();
-	material_sphere.setMaterial(pbrMaterial);
-	material_sphere.addTexture(irradianceMap, "irradianceMap", GL_TEXTURE_CUBE_MAP);
-	material_sphere.addTexture(prefilterMap, "prefilterMap", GL_TEXTURE_CUBE_MAP);
-	material_sphere.addTexture(brdfLUT, "brdfLUT", GL_TEXTURE_2D);
-
-	m->meshes[0].addTexture(irradianceMap, "irradianceMap", GL_TEXTURE_CUBE_MAP);
-	m->meshes[0].addTexture(prefilterMap, "prefilterMap", GL_TEXTURE_CUBE_MAP);
-	m->meshes[0].addTexture(brdfLUT, "brdfLUT", GL_TEXTURE_2D);
+	material_sphere.setMaterial(mtrlist0);
+	
 
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
+	m->meshes[0].setMaterial(mtrList);
+	m->meshes[0].transform.SetLocalScale(vec3(0.3f, 0.3f, 0.3f));
+	m->meshes[0].transform.SetLocalRotate(vec3(0.0f, -90.0f, -90.0f));
+	m->meshes[0].transform.SetTranslate(vec3(10.0f, 0.0f, -30.0f));
+	/*glm::mat4 model = mat4(1.0);
+*/
+	glm::mat4 sphereModel = mat4(1.0);
+	sphereModel = translate(sphereModel, vec3(0.0f, -20.0f, 0.0f));
+	sphereModel = scale(sphereModel, vec3(10.0f));
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
 		// --------------------
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		//ShowFPS();
 		// input
 		// -----
 		processInput(window);
@@ -264,21 +144,21 @@ int main()
 		// ------
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shader.use();
+		
 		glm::mat4 view = window_manager->camera_->GetViewMatrix();
-		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		material_sphere.setMVP(mat4(1.0), view, projection);
-		m->meshes[0].setMVP(mat4(1.0), view, projection);
-	/*	shader.setUniform("view", view);
-		shader.setUniform("projection", projection);*/
-		shader.setUniform("viewPos", window_manager->camera_->Position);
-		renderScene(shader);
-		backgroundShader.use();
+		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+		
+		//shader.use();
+		shader.setCameraPosition(window_manager->camera_->Position);
+		
+		material_sphere.setMVP(sphereModel, view, projection);
+		material_sphere.draw();
+
+		m->setMVP(MVPTransform(m->meshes[0].transform.GetModel(), view, projection));
+		m->Draw();
+	
 		background_cube.setMVP(mat4(1.0), view, projection);
-	//	backgroudShader.setUniform("envCubemap", 0);
-		/*backgroundShader.setUniform("view", view);
-		backgroundShader.setUniform("projection", projection);*/
-		background_cube.draw(backgroundShader);
+		background_cube.draw();
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
@@ -311,9 +191,9 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(FORWARD, deltaTime);
+		window_manager->camera_->ProcessKeyboard(FORWARD, deltaTime*10);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(BACKWARD, deltaTime);
+		window_manager->camera_->ProcessKeyboard(BACKWARD, deltaTime*10);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		window_manager->camera_->ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)

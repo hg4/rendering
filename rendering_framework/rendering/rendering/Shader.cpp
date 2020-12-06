@@ -100,3 +100,18 @@ void Shader::setUniform(const std::string & name, glm::mat4 &mat) const
 {
 	glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
+
+void Shader::setCameraPosition(glm::vec3 value, const std::string & name)
+{
+	use();
+	setUniform(name, value);
+}
+
+void Shader::setMVPTransform(MVPTransform & mvp)
+{
+	use();
+	setUniform("model", mvp.model);
+	setUniform("view", mvp.view);
+	setUniform("projection", mvp.projection);
+	setUniform("transpose_inverse_model", mvp.transpose_inverse_model);
+}

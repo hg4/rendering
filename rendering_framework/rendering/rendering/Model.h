@@ -20,6 +20,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include "MVPTransform.h"
 using namespace std;
 
 
@@ -44,6 +45,16 @@ public:
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].draw(shader);
 	}
+	void Draw()
+	{
+		for (unsigned int i = 0; i < meshes.size(); i++)
+			meshes[i].draw();
+	}
+	void setMVP(const MVPTransform & mvp) {
+		for (unsigned int i = 0; i < meshes.size(); i++)
+			meshes[i].setMVP(mvp);
+	}
+	void clearTextures();
 
 private:
 	// loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
@@ -150,7 +161,7 @@ private:
 		// diffuse: texture_diffuseN
 		// specular: texture_specularN
 		// normal: texture_normalN
-		cout << "NONE:" << material->GetTextureCount(aiTextureType_NONE)<<endl;
+	/*	cout << "NONE:" << material->GetTextureCount(aiTextureType_NONE)<<endl;
 		cout << "diffuse:" << material->GetTextureCount(aiTextureType_DIFFUSE) << endl;
 		cout << "shininess:" << material->GetTextureCount(aiTextureType_SHININESS) << endl;
 		cout << "ambient:" << material->GetTextureCount(aiTextureType_AMBIENT) << endl;
@@ -160,11 +171,11 @@ private:
 		cout << "reflection:" << material->GetTextureCount(aiTextureType_REFLECTION) << endl;
 		cout << "displacement:" << material->GetTextureCount(aiTextureType_DISPLACEMENT) << endl;
 		cout << "opacity:" << material->GetTextureCount(aiTextureType_OPACITY) << endl;
-		cout << "unknown:" << material->GetTextureCount(aiTextureType_UNKNOWN) << endl;
-		for (int i = 0; i < material->mNumProperties; i++) {
+		cout << "unknown:" << material->GetTextureCount(aiTextureType_UNKNOWN) << endl;*/
+		/*for (int i = 0; i < material->mNumProperties; i++) {
 			aiMaterialProperty * materialPtr = material->mProperties[i];
 			cout << materialPtr->mSemantic << endl;
-		}
+		}*/
 		// 1. diffuse maps
 		vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
