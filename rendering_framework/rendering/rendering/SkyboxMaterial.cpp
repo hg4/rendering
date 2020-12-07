@@ -15,21 +15,22 @@ SkyboxMaterial::~SkyboxMaterial()
 
 bool SkyboxMaterial::loadTextures(const string & root_path, const string & root_name, const string & appendix)
 {
-	vector<string> type{ "top","bottom","front","back","left","right"};
+	vector<string> type{ "right","left","top","down","front","back"};
 	vector<string> facesPath;
 	for (int i = 0; i < type.size(); i++) {
 		string finalPath = root_path + "/" + root_name + "_" + type[i] + "." + appendix;
 		facesPath.push_back(finalPath);
 	}
-	unsigned int id=TextureLoader::loadTextureCubeMap(facesPath, GL_UNSIGNED_BYTE, false);
+	unsigned int id=TextureLoader::loadTextureCubeMap(facesPath, GL_FLOAT, false);
 	Texture t = Texture(id, "envCubemap", GL_TEXTURE_CUBE_MAP);
 	textureList.push_back(t);
 	return true;
 }
 
 unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
+
 	MVPTransform* mvp = GenMVP();
-	BufferElement * be = BufferManager::genBindFRBOBuffer(512, 512);
+	BufferElement * be = BufferManager::genBindFRBOBuffer(size, size);
 	Shader equirectangularToCubemapShader("./shader/cube_generator.vs", "./shader/cube_generator.fs");
 	Texture hdr = TextureLoader::loadTexture2D(equirectangularPath.c_str(),
 		"equirectangularMap",
@@ -37,11 +38,11 @@ unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
 		false,
 		GL_CLAMP_TO_EDGE
 		);
-	unsigned int envCubemap = TextureLoader::genEmptyTextureCubeMap(512, 512, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
+	unsigned int envCubemap = TextureLoader::genEmptyTextureCubeMap(size, size, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
 	// ----------------------------------------------------------------------------------------------
 	// pbr: convert HDR equirectangular environment map to cubemap equivalent
 	// ----------------------------------------------------------------------
-	glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+	glViewport(0, 0, size, size); // don't forget to configure the viewport to the capture dimensions.
 	glBindFramebuffer(GL_FRAMEBUFFER, be->FBO);
 	Mesh cube = Geometry::createCube();
 	cube.material->BindShader(equirectangularToCubemapShader);
@@ -56,6 +57,24 @@ unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return envCubemap;
 }
+
+void SkyboxMaterial::SaveEnvCubemap()
+{
+	float * temp = new float[size*size * 3];
+	vector<string> type{ "right","left","top","down","back","front"};
+	string command = _rootPath + "/skybox";
+	_mkdir(command.c_str());
+	for (int i = 0; i < 6; i++) {
+		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, GL_FLOAT, temp);
+		
+		string filename = _rootPath + "/skybox/" + _rootName + "_" + type[i] + ".hdr";
+		if (stbi_write_hdr(filename.c_str(), size, size, 3, temp)) {
+			std::cout << type[i] << " save success." << std::endl;
+		}
+	}
+	
+}
+
 
 MVPTransform * SkyboxMaterial::GenMVP()
 {

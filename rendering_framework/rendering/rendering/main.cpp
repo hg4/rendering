@@ -104,7 +104,8 @@ int main()
 	m = new Model(gunModel);
 	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
 	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
-	SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
+	//SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
+	SkyboxMaterial* skybox = new SkyboxMaterial("./model/skybox","box","jpg");
 	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox);
 	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
 	MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
@@ -149,13 +150,13 @@ int main()
 		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
 		
 		//shader.use();
-		shader.setCameraPosition(window_manager->camera_->Position);
+		/*shader.setCameraPosition(window_manager->camera_->Position);
 		
 		material_sphere.setMVP(sphereModel, view, projection);
 		material_sphere.draw();
 
 		m->setMVP(MVPTransform(m->meshes[0].transform.GetModel(), view, projection));
-		m->Draw();
+		m->Draw();*/
 	
 		background_cube.setMVP(mat4(1.0), view, projection);
 		background_cube.draw();

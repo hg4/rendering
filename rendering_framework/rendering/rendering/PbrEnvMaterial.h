@@ -22,7 +22,7 @@ public:
 	}
 	~PbrEnvMaterial();
 	virtual bool loadTextures(const string& root_path, const string& root_name, const string& appendix);
-
+	void SavePbrEnv();
 private:
 	MVPTransform* GenMVP();
 	unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int envCubemap);

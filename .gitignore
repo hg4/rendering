@@ -11,3 +11,4 @@ rendering_framework/rendering/libraries/Libs/glfw3.lib
 *.opendb
 *.tga
 **/resources/model/*
+*.hdr
