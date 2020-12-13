@@ -4,9 +4,115 @@
 
 #include <string>
 
+
+Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> _i, vector<Texture> &_t, bool _use_ebo, GLenum _gl_type) {
+	material = shared_ptr<Material>(new Material());
+	_useEBO = _use_ebo;
+	_primitiveType = _gl_type;
+	vertices = _v;
+	indices = _i;
+	material->textureList = _t;
+	_vertex_number = _v.size();
+	init();
+}
+//只能用于三角形类型的接口，不能画line
+Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length) :Mesh(_pos, _norm, _tex, _length, false, NULL, 0, GL_TRIANGLES) {
+	material = shared_ptr<Material>(new Material());
+}
+Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length, unsigned int * _indices, int _indice_length) :
+	Mesh(_pos, _norm, _tex, _length, true, _indices, _indice_length, GL_TRIANGLES) {
+	material = shared_ptr<Material>(new Material());
+}
+Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length,
+	bool _use_ebo, unsigned int * _indices, int _indices_length, GLenum _gl_type) {
+	material = shared_ptr<Material>(new Material());
+	_useEBO = _use_ebo;
+	_primitiveType = _gl_type;
+	_vertex_number = _length / 3;
+	if (_useEBO)
+	{
+		_vertex_number = _indices_length;
+		indices = vector<unsigned int>{ _indices,_indices + _indices_length };
+	}
+	Vertex v;
+	for (int i = 0; i < _vertex_number * 3; i += 3)
+	{
+		vec3 p = vec3(_pos[i + 0], _pos[i + 1], _pos[i + 2]);
+		vec3 n = vec3(_norm[i + 0], _norm[i + 1], _norm[i + 2]);
+		v.position = p;
+		v.normal = n;
+	}
+	for (int i = 0; i < _vertex_number * 2; i += 2)
+	{
+		vec2 t = vec2(_tex[i + 0], _tex[i + 1]);
+		v.texCoords = t;
+	}
+	vertices.push_back(v);
+	init();
+}
+
+Mesh::Mesh(float * _vertices,
+	int _length,
+	int _vertex_size,
+	bool _use_ebo,
+	unsigned int * _indices,
+	int _indices_length,
+	GLenum _gl_type)
+{
+	material = shared_ptr<Material>(new Material());
+	_useEBO = _use_ebo;
+	_primitiveType = _gl_type;
+	_vertex_number = _length / _vertex_size;
+	//	primitive_number_ = _vertex_number / 3;
+	for (int i = 0; i < _vertex_number*_vertex_size; i += _vertex_size)
+	{
+		vec3 p = vec3(_vertices[i + 0], _vertices[i + 1], _vertices[i + 2]);
+		vec3 n = vec3(_vertices[i + 3], _vertices[i + 4], _vertices[i + 5]);
+		vec2 t = vec2(_vertices[i + 6], _vertices[i + 7]);
+		vertices.push_back(Vertex(p, n, t));
+	}
+	if (_useEBO)
+	{
+		_vertex_number = _indices_length;
+		indices = vector<unsigned int>{ _indices,_indices + _indices_length };
+	}
+	init();
+}
+
+Mesh::Mesh(float * _vertices,
+	int _length,
+	int _vertex_size) :Mesh(_vertices, _length, _vertex_size, false, nullptr, 0, GL_TRIANGLES)
+{
+	material = shared_ptr<Material>(new Material());
+}
+
+Mesh::Mesh(vector<float>& _vertices,
+	int _vertex_size,
+	vector<unsigned int>& _indices,
+	GLenum _gl_type)
+	:Mesh(_vertices.data(), _vertices.size(), _vertex_size, true, _indices.data(), _indices.size(), _gl_type)
+{
+	material = shared_ptr<Material>(new Material());
+}
+
+Mesh::Mesh(vector<float> &_vertices,
+	int _vertex_size) :Mesh(_vertices, _vertex_size, vector<unsigned int>(), GL_TRIANGLES)
+{
+	material = shared_ptr<Material>(new Material());
+}
+void Mesh::setMVP(mat4 model, mat4 view, mat4 projection) {
+	mvp = MVPTransform(model, view, projection);
+}
+void Mesh::setMVP(const MVPTransform& mvpt) {
+	mvp = mvpt;
+}
+void Mesh::ClearTextures() {
+	material->textureList.clear();
+}
+
 void Mesh::setMaterial(Material * mtr)
 {
-	material = mtr;
+	material.reset(mtr);
 	/*cout << mtr->textureList.size() << " " << material->textureList.size() << endl;*/
 }
 
@@ -14,47 +120,7 @@ void Mesh::addTexture(unsigned int  _id, string _name,GLenum _type)
 {
 	material->textureList.push_back(Texture(_id,_name,_type));
 }
-void Mesh::draw(Shader &shader)
-{
-	shader.setUniform("model", mvp.model);
-	shader.setUniform("view", mvp.view);
-	shader.setUniform("projection", mvp.projection);
-	shader.setUniform("compose", mvp.compose);
-	shader.setUniform("transpose_inverse_model", mvp.transpose_inverse_model);
-	// bind appropriate textures
-	unsigned int diffuseNr = 1;
-	unsigned int specularNr = 1;
-	unsigned int normalNr = 1;
-	unsigned int heightNr = 1;
-	for (int i = 0; i < material->textureList.size(); i++)
-	{
-		glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
-										  // retrieve texture number (the N in diffuse_textureN)
-		string number;
-		vector<Texture> textures = material->textureList;
-		string name = textures[i].name_in_shader;
-			if (name == "texture_diffuse")
-				number = std::to_string(diffuseNr++);
-			else if (name == "texture_specular")
-				number = std::to_string(specularNr++); // transfer unsigned int to stream
-			else if (name == "texture_normal")
-				number = std::to_string(normalNr++); // transfer unsigned int to stream
-			else if (name == "texture_height")
-				number = std::to_string(heightNr++); // transfer unsigned int to stream
-													 // now set the sampler to the correct texture unit
-			else number = "";
-			shader.setUniform(name + number, i);
-			// and finally bind the texture
-			glBindTexture(textures[i].texture_type, textures[i].id);
-	}
-	// draw mesh
-	glBindVertexArray(_be->VAO);
-	if(_useEBO) glDrawElements(_primitiveType, _vertex_number, GL_UNSIGNED_INT, 0);
-	else glDrawArrays(_primitiveType, 0, _vertex_number);
-	glBindVertexArray(0);
-	// always good practice to set everything back to defaults once configured.
-	glActiveTexture(GL_TEXTURE0);
-}
+
 
 void Mesh::draw()
 {
@@ -66,33 +132,18 @@ void Mesh::draw()
 	glBindVertexArray(0);
 }
 
+void Mesh::Render()
+{
+	glBindVertexArray(_be->VAO);
+	if (_useEBO) glDrawElements(_primitiveType, indices.size(), GL_UNSIGNED_INT, 0);
+	else glDrawArrays(_primitiveType, 0, _vertex_number);
+	glBindVertexArray(0);
+}
+
 void Mesh::init()
 {
 	if (_useEBO) 
 		_be=BufferManager::genBindEBOBuffer(&vertices[0], vertices.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int));
 	else _be=BufferManager::genBindVAOBuffer(&vertices[0], vertices.size() * sizeof(Vertex));
-	//unsigned int VAO, VBO, EBO=0;
-	//glGenVertexArrays(1, &VAO);
-	//glGenBuffers(1, &VBO);
-	//if(_useEBO) glGenBuffers(1, &EBO);
-	//glBindVertexArray(VAO);
-	////set data buffer
-	//glBindBuffer(GL_ARRAY_BUFFER,VBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
-	////set indices buffer
-	//if (_useEBO)
-	//{
-	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indices.size(), &indices[0], GL_STATIC_DRAW);
-	//}
-	////set data attribute
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT,GL_FALSE, sizeof(Vertex), (void*)0);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT,GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
-	////finish _be->VAO binding
-	//glBindVertexArray(0);
-	//_be = new BufferElement(VAO, VBO, EBO);
+
 }

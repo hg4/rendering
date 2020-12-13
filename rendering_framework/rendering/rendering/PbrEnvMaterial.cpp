@@ -2,6 +2,7 @@
 #include "TextureLoader.h"
 #include "Geometry.h"
 #include "BufferManager.h"
+#include "RenderObject.h"
 #include "Mesh.h"
 
 bool PbrEnvMaterial::loadTextures(const string & root_path, const string & root_name, const string & appendix)
@@ -67,6 +68,7 @@ unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int en
 	unsigned int RBO;
 	Shader prefilterShader("./shader/cube_generator.vs", "./shader/envmap_spec_prefilter.fs");
 	Mesh cube = Geometry::createCube();
+	
 	cube.material->BindShader(prefilterShader);
 	cube.addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
 	//unsigned int maxMipLevels = log2f((float)prefilterSize)-1;

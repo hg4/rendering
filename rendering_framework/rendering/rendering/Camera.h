@@ -4,9 +4,9 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <vector>
-
+#include <memory>
+using namespace std;
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
 	FORWARD,
@@ -40,7 +40,7 @@ public:
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
-
+	glm::mat4 projectionMatrix;
 	// constructor with vectors
 	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
@@ -61,10 +61,8 @@ public:
 	}
 
 	// returns the view matrix calculated using Euler Angles and the LookAt Matrix
-	glm::mat4 GetViewMatrix()
-	{
-		return glm::lookAt(Position, Position + Front, Up);
-	}
+	glm::mat4 GetViewMatrix();
+	void SetProjection(glm::mat4& projection);
 
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime)

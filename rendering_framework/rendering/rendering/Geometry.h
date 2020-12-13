@@ -7,6 +7,7 @@
 #include <vector>
 #include "Mesh.h"
 #include <memory>
+
 class Geometry {
 public:
 	static Mesh createCube();

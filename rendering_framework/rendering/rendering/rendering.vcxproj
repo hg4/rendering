@@ -126,7 +126,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="MaterialList.cpp" />
     <ClCompile Include="PbrEnvMaterial.cpp" />
     <ClCompile Include="PhongMaterial.cpp" />
@@ -138,6 +140,8 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="MVPTransform.cpp" />
     <ClCompile Include="PbrMaterial.cpp" />
+    <ClCompile Include="RenderObject.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SkyboxMaterial.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
@@ -145,6 +149,7 @@
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Light.h" />
     <ClInclude Include="MaterialList.h" />
     <ClInclude Include="PbrEnvMaterial.h" />
     <ClInclude Include="PhongMaterial.h" />
@@ -156,6 +161,8 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MVPTransform.h" />
+    <ClInclude Include="RenderObject.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SkyboxMaterial.h" />
     <ClInclude Include="stb_image.h" />

@@ -115,3 +115,9 @@ void Shader::setMVPTransform(MVPTransform & mvp)
 	setUniform("projection", mvp.projection);
 	setUniform("transpose_inverse_model", mvp.transpose_inverse_model);
 }
+
+void Shader::setLight(Light & l)
+{
+	use();
+
+}

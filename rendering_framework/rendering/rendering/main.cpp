@@ -16,6 +16,7 @@
 #include "MaterialList.h"
 #include "timer.h"
 #include "TextRenderer.h"
+#include "Scene.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -23,11 +24,8 @@
 using namespace std;
 
 
-//void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-//void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-//void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
 void processInput(GLFWwindow *window);
-//unsigned int loadTexture(const char *path,bool loadFloat=false);
 void renderScene( Shader &shader);
 
 
@@ -79,6 +77,41 @@ void ShowFPS() {
 	TextRenderer::T->RenderText(s.c_str(), 10.0f, 10.0f, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
 	//printf("fps:%.2f\n", fps);
 }
+Scene* ComposeScene() {
+	Scene* myScene = new Scene();
+
+	Shader* shader=new Shader("./shader/heightmap_shader.vs", "./shader/pbr_shader.fs");
+	Shader* backgroundShader=new Shader("./shader/cubemap_shader.vs", "./shader/cubemap_shader.fs");
+	//Shader quadShader("./shader/shader.vs", "./shader/shader.fs");
+	// load textures
+	// -------------
+	string model_name = "bamboo_wood_semigloss";
+	string model_path = "./model/" + model_name;
+	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
+	Model *md = new Model(gunModel);
+	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
+	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str(), "png");
+
+	shared_ptr<SkyboxMaterial> skybox(new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr"));
+	skybox->BindShader(*backgroundShader);
+
+	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
+	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox.get());
+	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
+	mtrList->BindShader(*shader);
+	//MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
+	md->ClearRenderObjectTextures("Default");
+	md->Scale(vec3(0.3f, 0.3f, 0.3f));
+	md->Rotate(vec3(0.0f,-90.0f,-90.0f));
+	md->Translate(vec3(10.0f, 0.0f, -30.0f));
+	md->renderObjDictionary["Default"]->SetMaterial(mtrList);
+	background_cube = Geometry::createCube();
+	shared_ptr<RenderObject> ro(new RenderObject(shared_ptr<Mesh>(&background_cube), skybox, "skybox"));
+	shared_ptr<Model> myModel(new Model(ro));
+	myScene->AddModel(myModel);
+	myScene->AddModel(shared_ptr<Model>(md));
+	return myScene;
+}
 int main()
 {
 	 window_manager = new WindowManager(1024, 1024, vec3(0.0f, 0.0f, 80.0f));
@@ -100,49 +133,51 @@ int main()
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 	// build and compile shaders
 	// -------------------------
-	Shader shader("./shader/heightmap_shader.vs", "./shader/pbr_shader.fs");
-	Shader backgroundShader("./shader/cubemap_shader.vs", "./shader/cubemap_shader.fs");
-	Shader quadShader("./shader/shader.vs", "./shader/shader.fs");
+	//Shader shader("./shader/heightmap_shader.vs", "./shader/pbr_shader.fs");
+	//Shader backgroundShader("./shader/cubemap_shader.vs", "./shader/cubemap_shader.fs");
+	//Shader quadShader("./shader/shader.vs", "./shader/shader.fs");
 	// load textures
 	// -------------
 	TIMING_BEGIN("preprecess begin.")
-	string model_name = "bamboo_wood_semigloss";
+	/*string model_name = "bamboo_wood_semigloss";
 	string model_path = "./model/" + model_name;
 	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str(),"png");
-
-	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
-	m = new Model(gunModel);
-	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
-	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
-	SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
-	//SkyboxMaterial* skybox = new SkyboxMaterial("./model/skybox","","jpg");
-	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox);
-	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
-	MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
-	m->meshes[0].material->textureList.clear();
-;
-	mtrList->BindShader(shader);
-	mtrlist0->BindShader(shader);
-	background_cube=Geometry::createCube();
-	//background_cube.addTexture(pbrEnv->textureList[PREFILTERMAP].id, "envCubemap", GL_TEXTURE_CUBE_MAP);
-	background_cube.setMaterial(skybox);
-	background_cube.material->BindShader(backgroundShader);
-	material_sphere = Geometry::createSphere();
-	material_sphere.setMaterial(mtrlist0);
+*/
+	Scene * s = ComposeScene();
+	s->SetCamera(shared_ptr<Camera>(window_manager->camera_));
+//	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
+//	m = new Model(gunModel);
+//	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
+//	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
+//	SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
+//	//SkyboxMaterial* skybox = new SkyboxMaterial("./model/skybox","","jpg");
+//	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox);
+//	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
+//	MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
+//	m->meshes[0]->material->textureList.clear();
+//;
+//	mtrList->BindShader(shader);
+//	mtrlist0->BindShader(shader);
+//	background_cube=Geometry::createCube();
+//	//background_cube.addTexture(pbrEnv->textureList[PREFILTERMAP].id, "envCubemap", GL_TEXTURE_CUBE_MAP);
+//	background_cube.setMaterial(skybox);
+//	background_cube.material->BindShader(backgroundShader);
+//	material_sphere = Geometry::createSphere();
+//	material_sphere.setMaterial(mtrlist0);
 	TIMING_END("preprocess end.")
 	//Mesh background = Geometry::createQuad();
 	//background.addTexture(pbrEnv->textureList[BRDFLUT].id, "brdfLUT", GL_TEXTURE_2D);
 	//background.material->BindShader(quadShader);
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	m->meshes[0].setMaterial(mtrList);
-	m->meshes[0].transform.SetLocalScale(vec3(0.3f, 0.3f, 0.3f));
-	m->meshes[0].transform.SetLocalRotate(vec3(0.0f, -90.0f, -90.0f));
-	m->meshes[0].transform.SetTranslate(vec3(10.0f, 0.0f, -30.0f));
+	/*m->meshes[0]->setMaterial(mtrList);
+	m->meshes[0]->transform.SetLocalScale(vec3(0.3f, 0.3f, 0.3f));
+	m->meshes[0]->transform.SetLocalRotate(vec3(0.0f, -90.0f, -90.0f));
+	m->meshes[0]->transform.SetTranslate(vec3(10.0f, 0.0f, -30.0f));*/
 	/*glm::mat4 model = mat4(1.0);
 */
-	glm::mat4 sphereModel = mat4(1.0);
-	sphereModel = translate(sphereModel, vec3(0.0f, -20.0f, 0.0f));
-	sphereModel = scale(sphereModel, vec3(10.0f));
+	//glm::mat4 sphereModel = mat4(1.0);
+	//sphereModel = translate(sphereModel, vec3(0.0f, -20.0f, 0.0f));
+	//sphereModel = scale(sphereModel, vec3(10.0f));
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -159,20 +194,21 @@ int main()
 		
 		glm::mat4 view = window_manager->camera_->GetViewMatrix();
 		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
-		
-		//shader.use();
-		shader.setCameraPosition(window_manager->camera_->Position);
-		
-		material_sphere.setMVP(sphereModel, view, projection);
-		material_sphere.draw();
+		window_manager->camera_->SetProjection(projection);
+		////shader.use();
+		//shader.setCameraPosition(window_manager->camera_->Position);
+		//
+		//material_sphere.setMVP(sphereModel, view, projection);
+		//material_sphere.draw();
 
-		m->setMVP(MVPTransform(m->meshes[0].transform.GetModel(), view, projection));
-		m->Draw();
+		//m->setMVP(MVPTransform(m->meshes[0]->transform.GetModel(), view, projection));
+		//m->Draw();
 	
-		/*background.setMVP(mat4(1.0), view, projection);
-		background.draw();*/
-		background_cube.setMVP(mat4(1.0), view, projection);
-		background_cube.draw();
+		///*background.setMVP(mat4(1.0), view, projection);
+		//background.draw();*/
+		//background_cube.setMVP(mat4(1.0), view, projection);
+		//background_cube.draw();
+		s->RenderScene();
 		ShowFPS();
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -183,19 +219,6 @@ int main()
 	return 0;
 }
 
-// renders the 3D scene
-// --------------------
-void renderScene(Shader &shader)
-{
-	int nrRows = 7;
-	int nrColumns = 7;
-	float spacing = 2.5;
-	// floor
-	glm::mat4 model = glm::mat4(1.0f);
-	shader.setUniform("model", model);
-	m->Draw(shader);
-	//material_sphere.draw(shader);
-}
 
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
