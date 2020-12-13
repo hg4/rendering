@@ -15,10 +15,13 @@ SkyboxMaterial::~SkyboxMaterial()
 
 bool SkyboxMaterial::loadTextures(const string & root_path, const string & root_name, const string & appendix)
 {
-	vector<string> type{ "right","left","top","down","front","back"};
+	vector<string> type{ "right","left","top","bottom","front","back"};
 	vector<string> facesPath;
 	for (int i = 0; i < type.size(); i++) {
-		string finalPath = root_path + "/" + root_name + "_" + type[i] + "." + appendix;
+		string finalPath = "";
+		if(root_name!="")
+		finalPath= root_path + "/" + root_name + "_" + type[i] + "." + appendix;
+		else finalPath= root_path + "/" + type[i] + "." + appendix;
 		facesPath.push_back(finalPath);
 	}
 	unsigned int id=TextureLoader::loadTextureCubeMap(facesPath, GL_FLOAT, false);
@@ -61,18 +64,17 @@ unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
 void SkyboxMaterial::SaveEnvCubemap()
 {
 	float * temp = new float[size*size * 3];
-	vector<string> type{ "right","left","top","down","back","front"};
+	vector<string> type{ "right","left","top","bottom","front","back"};
 	string command = _rootPath + "/skybox";
 	_mkdir(command.c_str());
 	for (int i = 0; i < 6; i++) {
 		glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, GL_FLOAT, temp);
-		
 		string filename = _rootPath + "/skybox/" + _rootName + "_" + type[i] + ".hdr";
 		if (stbi_write_hdr(filename.c_str(), size, size, 3, temp)) {
 			std::cout << type[i] << " save success." << std::endl;
 		}
 	}
-	
+	delete temp;
 }
 
 

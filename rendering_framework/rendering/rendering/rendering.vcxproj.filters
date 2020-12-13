@@ -63,6 +63,9 @@
     <ClCompile Include="MaterialList.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="TextRenderer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">
@@ -125,6 +128,12 @@
     <ClInclude Include="MaterialList.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TextRenderer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\shader\test_shader.fs">
@@ -179,6 +188,12 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="..\resources\shader\lut_preshader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\text_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\text_shader.vs">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

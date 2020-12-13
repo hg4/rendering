@@ -1,7 +1,7 @@
 #version 330 core
 
 in vec2 TexCoords;
-out vec2 FragColor;
+out vec3 FragColor;
 
 const float PI=3.14159265359;
 float RadicalInverse_VdC(uint bits) 
@@ -109,5 +109,5 @@ vec2 intergrateBRDF(float NdotV,float roughness){
 }
 void main(){
 	vec2 brdf=intergrateBRDF(TexCoords.x,TexCoords.y);
-	FragColor=brdf;
+	FragColor=vec3(brdf,0.0);
 }

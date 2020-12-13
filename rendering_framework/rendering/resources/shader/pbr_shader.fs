@@ -19,6 +19,7 @@ uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
+//uniform float prefilterLodLevel;
 uniform sampler2D brdfLUT;
 
 float pow5(float a){

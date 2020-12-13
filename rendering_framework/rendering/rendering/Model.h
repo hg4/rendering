@@ -11,9 +11,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "Light.h"
 #include "Mesh.h"
-
-
+#include "RenderObject.h"
+#include <memory>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -30,7 +31,9 @@ public:
 	// model data 
 	vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 	vector<Mesh>    meshes;
+	vector<RenderObject> renderObjList;
 	string directory;
+	map<string, shared_ptr<RenderObject>> meshDictionary;
 	bool gammaCorrection;
 
 	// constructor, expects a filepath to a 3D model.
@@ -54,8 +57,11 @@ public:
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].setMVP(mvp);
 	}
-	void clearTextures();
-
+	void ClearRenderObjectTextures(const string &objName);
+	shared_ptr<RenderObject> GetRenderObjectByName(const string &objName);
+	void ApplyLightForAll(shared_ptr<Light> l);
+	void ApplyLightForObj(shared_ptr<Light> l, const string &objName);
+	void ApplyCamera(shared_ptr<Camera> cam);
 private:
 	// loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 	void loadModel(string const &path)
@@ -79,6 +85,7 @@ private:
 	// processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
 	void processNode(aiNode *node, const aiScene *scene)
 	{
+		
 		// process each mesh located at the current node
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{

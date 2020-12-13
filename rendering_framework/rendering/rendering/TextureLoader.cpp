@@ -2,10 +2,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-void * TextureLoader::loadTextureData(const char * path, GLenum data_type, GLenum &data_format, int &width, int &height) {
+void * TextureLoader::loadTextureData(const char * path, GLenum data_type, GLenum &data_format, int &width, int &height, bool isflip) {
 	int  nrComponents;
 	void *data = NULL;
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(isflip);
 	if (data_type == GL_UNSIGNED_BYTE) {
 		data = stbi_load(path, &width, &height, &nrComponents, 0);
 	}
@@ -16,6 +16,8 @@ void * TextureLoader::loadTextureData(const char * path, GLenum data_type, GLenu
 	{
 		if (nrComponents == 1)
 			data_format = GL_RED;
+		else if (nrComponents == 2)
+			data_format = GL_RG;
 		else if (nrComponents == 3)
 			data_format = GL_RGB;
 		else if (nrComponents == 4)
@@ -73,23 +75,50 @@ unsigned int TextureLoader::loadTexture2D(const char * path,
 	return textureID;
 }
 Texture TextureLoader::loadTextureCubeMap(std::vector<std::string> texture_faces_path, std::string texture_name,
-	GLenum data_type, bool useMipmap, GLenum tex_surrounding) {
-	unsigned int id = loadTextureCubeMap(texture_faces_path, data_type, useMipmap, tex_surrounding);
+	GLenum data_type, bool useMipmap, GLenum tex_surrounding,int mipmapLevel) {
+	unsigned int id = loadTextureCubeMap(texture_faces_path, data_type, useMipmap, tex_surrounding,mipmapLevel);
 	return Texture(id, texture_name, GL_TEXTURE_CUBE_MAP);
 }
 unsigned int TextureLoader::loadTextureCubeMap(std::vector<std::string> texture_faces_path,
-	GLenum data_type , bool useMipmap , GLenum tex_surrounding ) {
+	GLenum data_type , bool useMipmap , GLenum tex_surrounding, int mipmapLevel) {
 	unsigned int textureID;
 	GLenum	texture_format, data_format;
 	int width, height;
 	void * data = NULL;
 	textureID = genTextures(GL_TEXTURE_CUBE_MAP);
 	for (unsigned int i = 0; i < texture_faces_path.size(); i++) {
-		data = loadTextureData(texture_faces_path[i].c_str(), data_type, data_format, width, height);
+		data = loadTextureData(texture_faces_path[i].c_str(), data_type, data_format, width, height,false);
 		texture_format = getTexFormat(data_format, data_type);
-		textureID = genTextures(GL_TEXTURE_CUBE_MAP);
-		bindTextures(width, height, texture_format, data_format, data, GL_TEXTURE_CUBE_MAP, data_type, tex_surrounding, useMipmap, i);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, mipmapLevel, texture_format, width, height, 0, data_format, data_type, data);
+		//bindTextures(width, height, texture_format, data_format, data, GL_TEXTURE_CUBE_MAP, data_type, tex_surrounding, useMipmap, i,mipmapLevel);
 		stbi_image_free(data);
 	}
+	ParameterSetting(GL_TEXTURE_CUBE_MAP, GL_CLAMP_TO_EDGE,useMipmap);
 	return textureID;
+}
+
+Texture TextureLoader::loadTextureCubeMapMipmap(vector<std::vector<std::string>> texture_faces_path, std::string texture_name,
+	GLenum data_type,GLenum tex_surrounding) {
+	unsigned int textureID;
+	GLenum	texture_format, data_format;
+	int width, height;
+	void * data = NULL;
+	textureID = genTextures(GL_TEXTURE_CUBE_MAP);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, texture_faces_path.size()-1);
+	for (unsigned int i = 0; i < texture_faces_path.size(); i++) {
+		for (unsigned int j = 0; j < texture_faces_path[i].size(); j++) {
+			data = loadTextureData(texture_faces_path[i][j].c_str(), data_type, data_format, width, height, false);
+			texture_format = getTexFormat(data_format, data_type);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + j , i, texture_format, width, height, 0, data_format, data_type, data);
+			//bindTextures(width, height, texture_format, data_format, data, GL_TEXTURE_CUBE_MAP, data_type, tex_surrounding, useMipmap, i,mipmapLevel);
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, tex_surrounding);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, tex_surrounding);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, tex_surrounding);
+	return Texture(textureID,texture_name,GL_TEXTURE_CUBE_MAP);
 }

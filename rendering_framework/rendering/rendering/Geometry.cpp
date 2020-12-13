@@ -52,14 +52,24 @@ Mesh Geometry::createCube()
 
 Mesh Geometry::createQuad()
 {
+	//float quadVertices[] = {
+	//	// positions        // texture Coords
+	//	-1.0f,  1.0f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 1.0f,
+	//	-1.0f, -1.0f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 0.0f,
+	//	1.0f,  1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 1.0f,
+	//	1.0f, -1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 0.0f,
+	//};
 	float quadVertices[] = {
 		// positions        // texture Coords
+		-1.0f, -1.0f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 0.0f,
 		-1.0f,  1.0f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 1.0f,
+		1.0f,  1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 1.0f,
 		-1.0f, -1.0f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 0.0f,
 		1.0f,  1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 1.0f,
 		1.0f, -1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 0.0f,
 	};
-	return Mesh(quadVertices, 8 * 4, 8, false, NULL, 0, GL_TRIANGLE_STRIP);
+
+	return Mesh(quadVertices, 8 * 6, 8, false, NULL, 0, GL_TRIANGLES);
 }
 unsigned int Geometry::renderPlane() {
 	unsigned int planeVAO;

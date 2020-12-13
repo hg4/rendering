@@ -22,8 +22,10 @@ public:
 	static void bind(GLenum type, BufferElement * ele);
 	static void unbind(GLenum type, BufferElement * ele);
 	static void deleteBuffer(BufferElement * ele);
+	static void DynamicDraw(bool flag);
 private:
 	static GLenum _rbo_type;
 	static GLenum _usage;
 	static GLenum _fbo_attachment;
+	static GLenum _draw_type;
 };

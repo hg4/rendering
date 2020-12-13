@@ -30,7 +30,8 @@ public:
 	}
 	~SkyboxMaterial();
 	virtual bool loadTextures(const string& root_path, const string& root_name, const string& appendix);
-	
+	string GetRootPath() { return _rootPath; }
+	string GetRootName() { return _rootName; }
 private:
 	string _rootPath,_rootName;
 	MVPTransform* GenMVP();

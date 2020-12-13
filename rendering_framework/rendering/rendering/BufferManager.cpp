@@ -3,6 +3,7 @@
 GLenum BufferManager::_rbo_type = GL_DEPTH24_STENCIL8;
 GLenum BufferManager::_usage = GL_STATIC_DRAW;
 GLenum BufferManager::_fbo_attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+GLenum BufferManager::_draw_type = GL_STATIC_DRAW;
 
 unsigned int BufferManager::genBindFBOBuffer()
 {
@@ -31,7 +32,7 @@ BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, const GLsize
 	glBindVertexArray(VAO);
 	//set data buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, data_byte_length, data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, data_byte_length, data, _draw_type);
 	//set data attribute
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
@@ -52,7 +53,7 @@ BufferElement* BufferManager::genBindEBOBuffer(const Vertex * vertex_data, const
 	bind(GL_ARRAY_BUFFER, be);
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indice_data_byte_length, indice_data, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indice_data_byte_length, indice_data, _draw_type);
 	be->EBO = EBO;
 	//unbind(GL_ARRAY_BUFFER, be);
 	return be;
@@ -95,3 +96,8 @@ void BufferManager::deleteBuffer(BufferElement * ele)
 	if (ele->RBO != 0) glDeleteRenderbuffers(1, &ele->RBO);
 }
 
+void BufferManager::DynamicDraw(bool flag)
+{
+	if (flag) _draw_type = GL_DYNAMIC_DRAW;
+	else _draw_type = GL_STATIC_DRAW;
+}

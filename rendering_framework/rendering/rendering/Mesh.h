@@ -115,11 +115,15 @@ public:
 	void setMVP(const MVPTransform& mvpt) {
 		mvp = mvpt;
 	}
+	void ClearTextures() {
+		material->textureList.clear();
+	}
 	void setMaterial(Material * mtr);
 	void addTexture(unsigned int  _id, string _name, GLenum _type);
 	//Mesh(const string path);
 	void draw(Shader &shader);
 	void draw();
+	BufferElement* GetBufferElement() { return _be; }
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
 	//vector<Texture> textures;

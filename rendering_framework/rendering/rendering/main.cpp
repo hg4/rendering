@@ -14,8 +14,12 @@
 #include "PbrEnvMaterial.h"
 #include "WindowManager.h"
 #include "MaterialList.h"
+#include "timer.h"
+#include "TextRenderer.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+
 using namespace std;
 
 
@@ -28,8 +32,8 @@ void renderScene( Shader &shader);
 
 
 // settings
-const unsigned int SCR_WIDTH = 1024;
-const unsigned int SCR_HEIGHT = 1024;
+unsigned int SCR_WIDTH = 1024;
+unsigned int SCR_HEIGHT = 1024;
 
 // camera
 //Camera camera(glm::vec3(0.0f, 0.0f, -3.0f));
@@ -69,7 +73,11 @@ void ShowFPS() {
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 	float fps = 1.0 / deltaTime;
-	printf("fps:%.2f\n", fps);
+	string s = "FPS:"+to_string(fps);
+	int dotpos = s.find_first_of('.');
+	if (dotpos + 2 < s.length()) s = s.substr(0, dotpos + 3);
+	TextRenderer::T->RenderText(s.c_str(), 10.0f, 10.0f, 0.5f, glm::vec3(1.0f, 1.0f, 1.0f));
+	//printf("fps:%.2f\n", fps);
 }
 int main()
 {
@@ -82,20 +90,22 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-
+	if (!TextRenderer::T->initialized) TextRenderer::T->Init();
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 	// build and compile shaders
 	// -------------------------
 	Shader shader("./shader/heightmap_shader.vs", "./shader/pbr_shader.fs");
 	Shader backgroundShader("./shader/cubemap_shader.vs", "./shader/cubemap_shader.fs");
-
+	Shader quadShader("./shader/shader.vs", "./shader/shader.fs");
 	// load textures
 	// -------------
-
+	TIMING_BEGIN("preprecess begin.")
 	string model_name = "bamboo_wood_semigloss";
 	string model_path = "./model/" + model_name;
 	PbrMaterial * pbrMaterial = new PbrMaterial(model_path.c_str(), model_name.c_str(),"png");
@@ -104,25 +114,25 @@ int main()
 	m = new Model(gunModel);
 	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
 	PbrMaterial * gunPbrMaterial = new PbrMaterial(texture_path.c_str(), "Cerberus", "tga");
-	//SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
-	SkyboxMaterial* skybox = new SkyboxMaterial("./model/skybox","box","jpg");
+	SkyboxMaterial* skybox = new SkyboxMaterial("./hdr/Arches_E_PineTree/Arches_E_PineTree_3k.hdr");
+	//SkyboxMaterial* skybox = new SkyboxMaterial("./model/skybox","","jpg");
 	PbrEnvMaterial* pbrEnv = new PbrEnvMaterial(skybox);
 	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
 	MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
 	m->meshes[0].material->textureList.clear();
-	//m->meshes[0].setMaterial(gunPbrMaterial);
-	
-	//pbrMaterial->BindShader(shader);
+;
 	mtrList->BindShader(shader);
 	mtrlist0->BindShader(shader);
 	background_cube=Geometry::createCube();
-	//background_cube.addTexture(envCubemap, "envCubemap", GL_TEXTURE_CUBE_MAP);
+	//background_cube.addTexture(pbrEnv->textureList[PREFILTERMAP].id, "envCubemap", GL_TEXTURE_CUBE_MAP);
 	background_cube.setMaterial(skybox);
 	background_cube.material->BindShader(backgroundShader);
 	material_sphere = Geometry::createSphere();
 	material_sphere.setMaterial(mtrlist0);
-	
-
+	TIMING_END("preprocess end.")
+	//Mesh background = Geometry::createQuad();
+	//background.addTexture(pbrEnv->textureList[BRDFLUT].id, "brdfLUT", GL_TEXTURE_2D);
+	//background.material->BindShader(quadShader);
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	m->meshes[0].setMaterial(mtrList);
 	m->meshes[0].transform.SetLocalScale(vec3(0.3f, 0.3f, 0.3f));
@@ -133,6 +143,7 @@ int main()
 	glm::mat4 sphereModel = mat4(1.0);
 	sphereModel = translate(sphereModel, vec3(0.0f, -20.0f, 0.0f));
 	sphereModel = scale(sphereModel, vec3(10.0f));
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
@@ -150,16 +161,19 @@ int main()
 		glm::mat4 projection = glm::perspective(glm::radians(window_manager->camera_->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
 		
 		//shader.use();
-		/*shader.setCameraPosition(window_manager->camera_->Position);
+		shader.setCameraPosition(window_manager->camera_->Position);
 		
 		material_sphere.setMVP(sphereModel, view, projection);
 		material_sphere.draw();
 
 		m->setMVP(MVPTransform(m->meshes[0].transform.GetModel(), view, projection));
-		m->Draw();*/
+		m->Draw();
 	
+		/*background.setMVP(mat4(1.0), view, projection);
+		background.draw();*/
 		background_cube.setMVP(mat4(1.0), view, projection);
 		background_cube.draw();
+		ShowFPS();
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
@@ -199,19 +213,19 @@ void processInput(GLFWwindow *window)
 		window_manager->camera_->ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		window_manager->camera_->ProcessKeyboard(RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(DOWN, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-		window_manager->camera_->updateCameraVectors(1.0, window_manager->camera_->Right);
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		window_manager->camera_->updateCameraVectors(-1.0, window_manager->camera_->Right);
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-		window_manager->camera_->updateCameraVectors(1.0, window_manager->camera_->Up);
-	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
-		window_manager->camera_->updateCameraVectors(-1.0, window_manager->camera_->Up);
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+	//if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+	//	window_manager->camera_->ProcessKeyboard(DOWN, deltaTime);
+	//if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+	//	window_manager->camera_->ProcessKeyboard(UP, deltaTime);
+	//if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	//	window_manager->camera_->updateCameraVectors(1.0, window_manager->camera_->Right);
+	//if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	//	window_manager->camera_->updateCameraVectors(-1.0, window_manager->camera_->Right);
+	//if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	//	window_manager->camera_->updateCameraVectors(1.0, window_manager->camera_->Up);
+	//if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+	//	window_manager->camera_->updateCameraVectors(-1.0, window_manager->camera_->Up);
+	/*if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
 		lightPos.y += 0.2;
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
 		lightPos.y -= 0.2;
@@ -225,6 +239,6 @@ void processInput(GLFWwindow *window)
 		lightPos.z += 0.2;
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
 		pbr_env_on = !pbr_env_on;
-	}
+	}*/
 }
 
