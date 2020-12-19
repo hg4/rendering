@@ -25,46 +25,44 @@
 #include "MVPTransform.h"
 using namespace std;
 
-class Scene;
-class RenderObject;
 
 
-class Model
+
+class Model:
+	public RenderObject
 {
 public:
 	// model data 
-	vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-	vector<shared_ptr<Mesh>> meshes;
-	vector<shared_ptr<RenderObject>> renderObjList;
+	//vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+	//vector<shared_ptr<Mesh>> meshes;
 	string directory;
 	map<string, shared_ptr<RenderObject>> renderObjDictionary;
-	shared_ptr<Scene> parentScene;
-	bool gammaCorrection;
+	//shared_ptr<Scene> parentScene;
+	//bool gammaCorrection;
 
 	Model()
 	{
 		init();
 	}
 	// constructor, expects a filepath to a 3D model.
-	Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
+	Model(string const &path, bool gamma = false)
 	{
 		init();
 		loadModel(path);
 	}
 	Model(shared_ptr<RenderObject> ro);
-	/*void Draw(Shader & shader);
-	void Draw();*/
-	void Render();
-	//void setMVP(const MVPTransform & mvp);
-	void SetParentScene(shared_ptr<Scene> s);
+	virtual void Render();
+	virtual void SetMVP(const mat4 & parentModel);
+	virtual void SetParentScene(shared_ptr<Scene> s);
+	virtual void SetMaterial(Material * _mtr);
+	/*virtual void Scale(vec3 s);
+	virtual void Rotate(vec3 r);
+	virtual void Translate(vec3 t);*/
+	void AddRenderObject(RenderObject * r);
+	void AddRenderObject(shared_ptr<RenderObject> r);
 	void ClearRenderObjectTextures(const string &objName);
 	shared_ptr<RenderObject> GetRenderObjectByName(const string &objName);
-	void Scale(vec3 s);
-	void Rotate(vec3 r);
-	void Translate(vec3 t);
-	/*void ApplyLightForAll(shared_ptr<Light> l);
-	void ApplyLightForObj(shared_ptr<Light> l, const string &objName);
-	void ApplyCamera(shared_ptr<Camera> cam);*/
+	
 private:
 	// loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 	void loadModel(string const & path);
@@ -73,5 +71,9 @@ private:
 	//vector<Texture> loadMaterialTextures(aiMaterial * mat, aiTextureType type, string typeName);
 	//unsigned int TextureFromFile(const char * path, const string & directory, bool gamma = false);
 	void init();
+	bool _updateMVP;
+
+	mat4 _parentModel;
+	vector<shared_ptr<RenderObject>> _renderObjList;
 };
 #endif

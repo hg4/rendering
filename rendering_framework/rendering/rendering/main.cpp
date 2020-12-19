@@ -100,16 +100,19 @@ Scene* ComposeScene() {
 	MaterialList* mtrList = new MaterialList(gunPbrMaterial, pbrEnv);
 	mtrList->BindShader(*shader);
 	//MaterialList* mtrlist0 = new MaterialList(pbrMaterial, pbrEnv);
-	md->ClearRenderObjectTextures("Default");
+	//md->ClearRenderObjectTextures("Default");
 	md->Scale(vec3(0.3f, 0.3f, 0.3f));
 	md->Rotate(vec3(0.0f,-90.0f,-90.0f));
-	md->Translate(vec3(10.0f, 0.0f, -30.0f));
-	md->renderObjDictionary["Default"]->SetMaterial(mtrList);
+	md->Translate(vec3(0.0f, 0.0f, -30.0f));
+	md->SetMaterial(mtrList);
+	//md->renderObjDictionary["Default"]->SetMaterial(mtrList);
 	background_cube = Geometry::createCube();
 	shared_ptr<RenderObject> ro(new RenderObject(shared_ptr<Mesh>(&background_cube), skybox, "skybox"));
-	shared_ptr<Model> myModel(new Model(ro));
-	myScene->AddModel(myModel);
-	myScene->AddModel(shared_ptr<Model>(md));
+	shared_ptr<Model> myModel(new Model());
+	myModel->Translate(vec3(10.0f, 0.0f, 0.0f));
+	myModel->AddRenderObject(md);
+	myScene->AddRenderObject(myModel);
+	myScene->AddRenderObject(ro);
 	return myScene;
 }
 int main()

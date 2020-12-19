@@ -23,7 +23,29 @@ unsigned int BufferManager::genBindRBOBuffer(const int height, const int width)
 	return RBO;
 }
 
-
+BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, uint data_length, const Tangent * t_data, uint tan_length)
+{
+	unsigned int VAO, VBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*data_length + sizeof(Tangent)*tan_length, nullptr, _draw_type);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex)*data_length, data);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex)*data_length, sizeof(Tangent)*data_length, t_data);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Tangent), (void*)(sizeof(Vertex)*data_length+ offsetof(Tangent, tangent)));
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Tangent), (void*)(sizeof(Vertex)*data_length+ offsetof(Tangent, bitangent)));
+	//glBindVertexArray(0);
+	return new BufferElement(VAO, VBO, 0);
+}
 BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, const GLsizeiptr data_byte_length)
 {
 	unsigned int VAO, VBO;
@@ -40,9 +62,26 @@ BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, const GLsize
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	/*glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));*/
 	//finish VAO binding
 	//glBindVertexArray(0);
 	return new BufferElement(VAO,VBO,0);
+}
+BufferElement * BufferManager::genBindEBOBuffer(const Vertex * vertex_data, uint v_length, const unsigned int * indice_data, uint i_length, const Tangent * tan_data, uint tan_length)
+{
+	unsigned int EBO;
+
+	BufferElement* be = genBindVAOBuffer(vertex_data, v_length,tan_data,tan_length);
+	bind(GL_ARRAY_BUFFER, be);
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * i_length, indice_data, _draw_type);
+	be->EBO = EBO;
+	//unbind(GL_ARRAY_BUFFER, be);
+	return be;
 }
 
 BufferElement* BufferManager::genBindEBOBuffer(const Vertex * vertex_data, const GLsizeiptr vertex_data_byte_length, const unsigned int * indice_data, const GLsizeiptr indice_data_byte_length)

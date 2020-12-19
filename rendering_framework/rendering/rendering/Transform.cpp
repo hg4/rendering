@@ -4,6 +4,7 @@
 
 Transform::Transform()
 {
+	_model = mat4(1.0);
 }
 
 

@@ -4,19 +4,20 @@ out vec4 FragColor;
 in vec3 FragPos;  
 in vec3 Normal;  
 in vec2 TexCoords;
-
+in mat3 TtoW;
 float PI = 3.14159265359;
 
 
 uniform vec3 viewPos;
-//uniform float metallic;
-//uniform float roughness;
+
 uniform vec3 lightPositions[4];
 uniform vec3 lightColors[4];
 uniform sampler2D texture_albedo;
 uniform sampler2D texture_ao;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
+uniform sampler2D texture_normal;
+
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
 //uniform float prefilterLodLevel;
@@ -60,7 +61,8 @@ float GeometrySmith(vec3 N,vec3 V,vec3 L,float alpha){
 void main(){
 	vec3 albedo=texture(texture_albedo,TexCoords).rgb;
 	//vec3 albedo=vec3(0.5,0.0,0.0);
-	vec3 N=normalize(Normal);
+	vec3 Tnormal= normalize(2 * texture(texture_normal,TexCoords).rgb - 1);
+	vec3 N=normalize(TtoW * Tnormal);
 	vec3 V=normalize(viewPos-FragPos);
 	vec3 F0=vec3(0.04);
 	float metallic=texture(texture_metallic,TexCoords).r;

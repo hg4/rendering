@@ -4,6 +4,11 @@
 #include <glm/gtc/type_ptr.hpp>
 using namespace glm;
 
+struct Tangent {
+	vec3 tangent;
+	vec3 bitangent;
+};
+
 class Vertex {
 public:
 	Vertex() {}
@@ -13,3 +18,5 @@ public:
 	vec3 normal;
 	vec2 texCoords;
 };
+
+

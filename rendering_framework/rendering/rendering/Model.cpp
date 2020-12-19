@@ -6,7 +6,7 @@ using namespace std;
 Model::Model(shared_ptr<RenderObject> ro) {
 	init();
 	shared_ptr<RenderObject> temp(ro);
-	renderObjList.push_back(temp);
+	_renderObjList.push_back(temp);
 	renderObjDictionary[temp->name] = temp;
 }
 
@@ -26,18 +26,39 @@ Model::Model(shared_ptr<RenderObject> ro) {
 //		meshes[i]->setMVP(mvp);
 //}
 void Model::Render() {
-	for (int i = 0; i < renderObjList.size(); i++) {
-		renderObjList[i]->Render();
+	/*if (_updateMVP) {
+		SetMVP(_parentModel);
+	}*/
+	for (int i = 0; i < _renderObjList.size(); i++) {
+		_renderObjList[i]->Render();
 	}
+}
+
+void Model::SetMaterial(Material * _mtr)
+{
+	mtr = shared_ptr<Material>(_mtr);
+	for (int i = 0; i < _renderObjList.size(); i++)
+		_renderObjList[i]->SetMaterial(_mtr);
 }
 
 void Model::SetParentScene(shared_ptr<Scene> s)
 {
 	parentScene = s;
-	for (int i = 0; i < renderObjList.size(); i++)
+	for (int i = 0; i < _renderObjList.size(); i++)
 	{
-		renderObjList[i]->parentScene = s;
+		_renderObjList[i]->SetParentScene(s);
 	}
+}
+
+void Model::SetMVP(const mat4 & parentModel)
+{
+	_parentModel = parentModel;
+	for (int i = 0; i < _renderObjList.size(); i++) 
+	{
+		_renderObjList[i]->SetMVP(_parentModel * transform->GetModel());
+		//GetModel() return transpose matrix,so reverse the mvp order.
+	}
+	_updateMVP = false;
 }
 
 shared_ptr<RenderObject> Model::GetRenderObjectByName(const string & objName)
@@ -48,35 +69,31 @@ shared_ptr<RenderObject> Model::GetRenderObjectByName(const string & objName)
 void Model::init()
 {
 	parentScene = nullptr;
+	mtr = nullptr;
+	_updateMVP = true;
 }
 void Model::ClearRenderObjectTextures(const string & objName)
 {
 	shared_ptr<RenderObject> ro = renderObjDictionary[objName];
 	ro->mtr->textureList.clear();
 }
-void Model::Scale(vec3 s)
-{
-	for (int i = 0; i < renderObjList.size(); i++) 
-	{
-		renderObjList[i]->transform.SetLocalScale(s);
-	}
-}
-// 3 components mean xyz axis rotation by angle(not radians) 
-void Model::Rotate(vec3 r)
-{
-	for (int i = 0; i < renderObjList.size(); i++)
-	{
-		renderObjList[i]->transform.SetLocalRotate(r);
-	}
-}
-
-void Model::Translate(vec3 t)
-{
-	for (int i = 0; i < renderObjList.size(); i++)
-	{
-		renderObjList[i]->transform.SetTranslate(t);
-	}
-}
+//void Model::Scale(vec3 s)
+//{
+//	transform->SetLocalScale(s);
+//	_updateMVP = true;
+//}
+//// 3 components mean xyz axis rotation by angle(not radians) 
+//void Model::Rotate(vec3 r)
+//{
+//	transform->SetLocalRotate(r);
+//	_updateMVP = true;
+//}
+//
+//void Model::Translate(vec3 t)
+//{
+//	transform->SetTranslate(t);
+//	_updateMVP = true;
+//}
 
 
 //unsigned int Model::TextureFromFile(const char *path, const string &directory, bool gamma)
@@ -118,7 +135,16 @@ void Model::Translate(vec3 t)
 //
 //	return textureID;
 //}
+void Model::AddRenderObject(RenderObject * r)
+{
+	AddRenderObject(shared_ptr<RenderObject>(r));
+}
 
+void Model::AddRenderObject(shared_ptr<RenderObject> r)
+{
+	_renderObjList.push_back(r);
+	r->parent = shared_ptr<RenderObject>(this);
+}
 
 void Model::loadModel(string const &path)
 {
@@ -149,11 +175,11 @@ void Model::processNode(aiNode *node, const aiScene *scene)
 		// the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		shared_ptr<Mesh> ms = shared_ptr<Mesh>(processMesh(mesh, scene));
-		meshes.push_back(ms);
+	//	meshes.push_back(ms);
 		string ms_name = mesh->mName.data;
 		if (ms_name == "") ms_name = "Default";
 		shared_ptr<RenderObject> ro(new RenderObject(ms, ms_name));
-		renderObjList.push_back(ro);
+		AddRenderObject(ro);
 		renderObjDictionary[ms_name] = ro;
 	}
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
@@ -170,11 +196,12 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
 	vector<Texture> textures;
-
+	vector<Tangent> tangents;
 	// walk through each of the mesh's vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
+		Tangent tan;
 		glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
 						  // positions
 		vector.x = mesh->mVertices[i].x;
@@ -199,19 +226,19 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 			vec.y = mesh->mTextureCoords[0][i].y;
 			vertex.texCoords = vec;
 			// tangent
-			/*vector.x = mesh->mTangents[i].x;
+			vector.x = mesh->mTangents[i].x;
 			vector.y = mesh->mTangents[i].y;
 			vector.z = mesh->mTangents[i].z;
-			vertex.Tangent = vector;*/
+			tan.tangent = vector;
 			// bitangent
-			/*	vector.x = mesh->mBitangents[i].x;
+			vector.x = mesh->mBitangents[i].x;
 			vector.y = mesh->mBitangents[i].y;
 			vector.z = mesh->mBitangents[i].z;
-			vertex.Bitangent = vector;*/
+			tan.bitangent = vector;
 		}
 		else
 			vertex.texCoords = glm::vec2(0.0f, 0.0f);
-
+		tangents.push_back(tan);
 		vertices.push_back(vertex);
 	}
 	// now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
@@ -245,7 +272,7 @@ Mesh* Model::processMesh(aiMesh *mesh, const aiScene *scene)
 	//textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	// return a mesh object created from the extracted mesh data 
-	return new Mesh(vertices, indices, textures);
+	return new Mesh(vertices, indices, textures,tangents);
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.

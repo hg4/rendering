@@ -4,10 +4,24 @@
 
 #include <string>
 
-
-Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> _i, vector<Texture> &_t, bool _use_ebo, GLenum _gl_type) {
+Mesh::Mesh(vector<Vertex>& _v, vector<unsigned int>& _i, vector<Texture>& _t, vector<Tangent> &_tg)
+{
 	material = shared_ptr<Material>(new Material());
-	_useEBO = _use_ebo;
+	_useEBO = true;
+	_useTangent = true;
+	_primitiveType = GL_TRIANGLES;
+	tangents = _tg;
+	vertices = _v;
+	indices = _i;
+	material->textureList = _t;
+	_vertex_number = _v.size();
+	init();
+}
+
+Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> &_i, vector<Texture> &_t, GLenum _gl_type) {
+	material = shared_ptr<Material>(new Material());
+	_useEBO = true;
+	_useTangent = false;
 	_primitiveType = _gl_type;
 	vertices = _v;
 	indices = _i;
@@ -26,6 +40,7 @@ Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length, unsigned int * 
 Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length,
 	bool _use_ebo, unsigned int * _indices, int _indices_length, GLenum _gl_type) {
 	material = shared_ptr<Material>(new Material());
+	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
 	_vertex_number = _length / 3;
@@ -60,6 +75,7 @@ Mesh::Mesh(float * _vertices,
 	GLenum _gl_type)
 {
 	material = shared_ptr<Material>(new Material());
+	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
 	_vertex_number = _length / _vertex_size;
@@ -142,8 +158,12 @@ void Mesh::Render()
 
 void Mesh::init()
 {
-	if (_useEBO) 
-		_be=BufferManager::genBindEBOBuffer(&vertices[0], vertices.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int));
-	else _be=BufferManager::genBindVAOBuffer(&vertices[0], vertices.size() * sizeof(Vertex));
+	if (_useEBO)
+		if (_useTangent)
+			_be = BufferManager::genBindEBOBuffer(&vertices[0], vertices.size(), indices.data(), indices.size(), &tangents[0], tangents.size());
+		else _be=BufferManager::genBindEBOBuffer(&vertices[0], vertices.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int));
+	else if (_useTangent)
+		_be = BufferManager::genBindVAOBuffer(&vertices[0], vertices.size(),&tangents[0],tangents.size());
+		else _be=BufferManager::genBindVAOBuffer(&vertices[0], vertices.size() * sizeof(Vertex));
 
 }
