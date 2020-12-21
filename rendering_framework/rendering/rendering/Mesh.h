@@ -38,7 +38,8 @@ public:
 	vector<Tangent> tangents;
 	vector<unsigned int> indices;
 	//vector<Texture> textures;
-	shared_ptr<Material> material;
+	//shared_ptr<Material> material;
+	Material* material;
 	MVPTransform mvp;
 	Transform transform;
 private:

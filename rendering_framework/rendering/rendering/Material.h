@@ -15,8 +15,6 @@ public:
 	bool useDefaultShader;*/
 	Material() 
 	{
-		/*shader = shared_ptr<Shader>(new Shader("./shader/standard_shader.vs", "./shader/standard_shader.fs"));
-		useDefaultShader = true;*/
 		basicColor = vec3(0.5f, 0.5f, 0.5f);
 	}
 	Material(Shader &s)

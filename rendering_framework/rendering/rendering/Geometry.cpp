@@ -1,6 +1,6 @@
 #include "Geometry.h"
 
-Mesh Geometry::createCube()
+shared_ptr<Mesh> Geometry::createCube()
 {
 	float vertices[] = {
 		// back face
@@ -47,10 +47,10 @@ Mesh Geometry::createCube()
 		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
 	};
 	// render Cube
-	return Mesh(vertices, 8 * 6 * 6, 8);
+	return shared_ptr<Mesh>(new Mesh(vertices, 8 * 6 * 6, 8));
 }
 
-Mesh Geometry::createQuad()
+shared_ptr<Mesh> Geometry::createQuad()
 {
 	//float quadVertices[] = {
 	//	// positions        // texture Coords
@@ -69,7 +69,7 @@ Mesh Geometry::createQuad()
 		1.0f, -1.0f, 0.0f, 0.0f,0.0f,1.0f, 1.0f, 0.0f,
 	};
 
-	return Mesh(quadVertices, 8 * 6, 8, false, NULL, 0, GL_TRIANGLES);
+	return shared_ptr<Mesh>(new Mesh(quadVertices, 8 * 6, 8, false, NULL, 0, GL_TRIANGLES));
 }
 unsigned int Geometry::renderPlane() {
 	unsigned int planeVAO;
@@ -102,7 +102,7 @@ unsigned int Geometry::renderPlane() {
 	glBindVertexArray(0);
 	return planeVAO;
 }
-Mesh Geometry::createSphere()
+shared_ptr<Mesh> Geometry::createSphere()
 {
 	//unsigned int sphereVAO = 0;
 	unsigned int indexCount;
@@ -175,6 +175,6 @@ Mesh Geometry::createSphere()
 	}
 	Mesh m(data, 8, indices, GL_TRIANGLE_STRIP);
 	//Mesh m(data.data(), data.size(), 8, true, indices.data(), indices.size(), GL_TRIANGLE_STRIP);
-	return m;
+	return shared_ptr<Mesh>(&m);
 
 }

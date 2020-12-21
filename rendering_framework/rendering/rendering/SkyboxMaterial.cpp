@@ -41,24 +41,31 @@ unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
 		false,
 		GL_CLAMP_TO_EDGE
 		);
+	//cout << glGetError() << endl;
 	unsigned int envCubemap = TextureLoader::genEmptyTextureCubeMap(size, size, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
 	// ----------------------------------------------------------------------------------------------
 	// pbr: convert HDR equirectangular environment map to cubemap equivalent
 	// ----------------------------------------------------------------------
 	glViewport(0, 0, size, size); // don't forget to configure the viewport to the capture dimensions.
 	glBindFramebuffer(GL_FRAMEBUFFER, be->FBO);
-	Mesh cube = Geometry::createCube();
-	cube.material->BindShader(equirectangularToCubemapShader);
-	cube.addTexture(hdr.id, hdr.name_in_shader, GL_TEXTURE_2D);
+	shared_ptr<Mesh> cube = Geometry::createCube();
+	//cout << cube.material.use_count() << endl;
+	cube->material->BindShader(equirectangularToCubemapShader);
+	//cout << cube.material.use_count() << endl;
+	cube->addTexture(hdr.id, hdr.name_in_shader, GL_TEXTURE_2D);
+	//cout << cube.material.use_count() << endl;
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		cube.setMVP(mvp[i]);
+		cube->setMVP(mvp[i]);
+		//cout << cube->material.use_count() << endl;
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		cube.draw();
+		cube->draw();
 	}
+	//cout << cube->material.use_count() << endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return envCubemap;
+
 }
 
 void SkyboxMaterial::SaveEnvCubemap()
@@ -80,20 +87,20 @@ void SkyboxMaterial::SaveEnvCubemap()
 
 MVPTransform * SkyboxMaterial::GenMVP()
 {
-		glm::mat4 model = glm::mat4(1.0);
-		glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-		glm::mat4 views[] =
-		{
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
-		};
-		MVPTransform * mvp_arr = new MVPTransform[6];
-		for (int i = 0; i < 6; i++) {
-			mvp_arr[i] = MVPTransform(model, views[i], projection);
-		}
-		return mvp_arr;
+	glm::mat4 model = glm::mat4(1.0);
+	glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	glm::mat4 views[] =
+	{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+	};
+	MVPTransform * mvp_arr = new MVPTransform[6];
+	for (int i = 0; i < 6; i++) {
+		mvp_arr[i] = MVPTransform(model, views[i], projection);
+	}
+	return mvp_arr;
 }

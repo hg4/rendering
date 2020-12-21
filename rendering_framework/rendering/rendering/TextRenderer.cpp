@@ -27,8 +27,8 @@ void TextRenderer::Init()
 	BufferManager::DynamicDraw(true);
 	_renderQuad = Geometry::createQuad();
 	BufferManager::DynamicDraw(false);
-	_renderQuad.setMVP(MVPTransform(mat4(1.0), mat4(1.0), glm::ortho(0.0f,(float) SCR_WIDTH, 0.0f, (float)SCR_HEIGHT)));
-	_renderQuad.material->BindShader(_s);
+	_renderQuad->setMVP(MVPTransform(mat4(1.0), mat4(1.0), glm::ortho(0.0f,(float) SCR_WIDTH, 0.0f, (float)SCR_HEIGHT)));
+	_renderQuad->material->BindShader(_s);
 }
 
 void TextRenderer::FTLibPrepare()
@@ -89,16 +89,16 @@ void TextRenderer::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat sc
 	_s.use();
 	_s.setUniform("textColor", color);
 	//glActiveTexture(GL_TEXTURE0);
-	BufferElement* be = _renderQuad.GetBufferElement();
+	BufferElement* be = _renderQuad->GetBufferElement();
 	glBindVertexArray(be->VAO);
 
 	// 遍历文本中所有的字符
 	std::string::const_iterator c;
 	for (c = text.begin(); c != text.end(); c++)
 	{
-		_renderQuad.ClearTextures();
+		_renderQuad->ClearTextures();
 		Character ch = _characters[*c];
-		_renderQuad.addTexture(ch.TextureID, "character", GL_TEXTURE_2D);
+		_renderQuad->addTexture(ch.TextureID, "character", GL_TEXTURE_2D);
 		GLfloat xpos = x + ch.Bearing.x * scale;
 		GLfloat ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
 
@@ -121,7 +121,7 @@ void TextRenderer::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat sc
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		// 绘制四边形
-		_renderQuad.draw();
+		_renderQuad->draw();
 
 		// 更新位置到下一个字形的原点，注意单位是1/64像素
 		x += (ch.Advance >> 6) * scale; // 位偏移6个单位来获取单位为像素的值 (2^6 = 64)

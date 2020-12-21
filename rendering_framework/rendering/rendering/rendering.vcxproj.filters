@@ -217,5 +217,11 @@
     <None Include="..\resources\shader\text_shader.vs">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\resources\shader\plane_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\plane_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

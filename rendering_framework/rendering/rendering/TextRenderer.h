@@ -33,7 +33,7 @@ private:
 	unsigned int VAO, VBO;
 	void FTLibPrepare();
 	Shader _s;
-	Mesh _renderQuad;
+	shared_ptr<Mesh> _renderQuad;
 };
 
 

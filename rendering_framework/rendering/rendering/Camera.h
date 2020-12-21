@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 #include <vector>
 #include <memory>
 using namespace std;
@@ -12,12 +13,14 @@ enum Camera_Movement {
 	FORWARD,
 	BACKWARD,
 	LEFT,
-	RIGHT
+	RIGHT,
+	DOWN,
+	UP
 };
 
 // Default camera values
-const float YAW = -90.0f;
-const float PITCH = 0.0f;
+const float YAW = -85.0f;
+const float PITCH = -9.0f;
 const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
@@ -76,6 +79,10 @@ public:
 			Position -= Right * velocity;
 		if (direction == RIGHT)
 			Position += Right * velocity;
+		if (direction == DOWN)
+			Position -= Up * velocity;
+		if (direction == UP)
+			Position += Up * velocity;
 	}
 
 	// processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -98,6 +105,7 @@ public:
 
 		// update Front, Right and Up Vectors using the updated Euler angles
 		updateCameraVectors();
+		std::cout << Yaw << " " << Pitch << std::endl;
 	}
 
 	// processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis

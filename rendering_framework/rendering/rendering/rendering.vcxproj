@@ -186,6 +186,8 @@
     <None Include="..\resources\shader\heightmap_shader.vs" />
     <None Include="..\resources\shader\lut_preshader.fs" />
     <None Include="..\resources\shader\pbr_shader.fs" />
+    <None Include="..\resources\shader\plane_shader.fs" />
+    <None Include="..\resources\shader\plane_shader.vs" />
     <None Include="..\resources\shader\shader.fs" />
     <None Include="..\resources\shader\shader.vs" />
     <None Include="..\resources\shader\shadow_mapping.fs" />

@@ -67,10 +67,10 @@ unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int en
 	unsigned int FBO = BufferManager::genBindFBOBuffer();
 	unsigned int RBO;
 	Shader prefilterShader("./shader/cube_generator.vs", "./shader/envmap_spec_prefilter.fs");
-	Mesh cube = Geometry::createCube();
+	shared_ptr<Mesh> cube = Geometry::createCube();
 	
-	cube.material->BindShader(prefilterShader);
-	cube.addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
+	cube->material->BindShader(prefilterShader);
+	cube->addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
 	//unsigned int maxMipLevels = log2f((float)prefilterSize)-1;
 	
 	for (int mip = 0; mip < _maxMipLevels; mip++) {
@@ -81,10 +81,10 @@ unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int en
 		float roughness = (float)mip / (float)(_maxMipLevels - 1);
 		prefilterShader.setUniform("roughness", roughness);
 		for (int i = 0; i < 6; i++) {
-			cube.setMVP(mvp[i]);
+			cube->setMVP(mvp[i]);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube.draw();
+			cube->draw();
 		}
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -96,16 +96,16 @@ unsigned int PbrEnvMaterial::GenIrradianceMap(MVPTransform *mvp, unsigned int en
 	unsigned int irradianceMap = TextureLoader::genEmptyTextureCubeMap(irradianceSize, irradianceSize, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
 	Shader irradianceShader("./shader/cube_generator.vs", "./shader/envmap_preshader.fs");
 	glViewport(0, 0, irradianceSize, irradianceSize); // don't forget to configure the viewport to the capture dimensions.
-	Mesh cube = Geometry::createCube();
-	cube.material->BindShader(irradianceShader);
-	cube.addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
+	shared_ptr<Mesh> cube = Geometry::createCube();
+	cube->material->BindShader(irradianceShader);
+	cube->addTexture(envCubemap, "environmentMap", GL_TEXTURE_CUBE_MAP);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		cube.setMVP(mvp[i]);
+		cube->setMVP(mvp[i]);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		cube.draw();
+		cube->draw();
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -119,9 +119,9 @@ unsigned int PbrEnvMaterial::GenLUT()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT, 0);
 	glViewport(0, 0, lutSize, lutSize);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	Mesh quad = Geometry::createQuad();
-	quad.material->BindShader(LUTShader);
-	quad.draw();
+	shared_ptr<Mesh> quad = Geometry::createQuad();
+	quad->material->BindShader(LUTShader);
+	quad->draw();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return brdfLUT;
 }

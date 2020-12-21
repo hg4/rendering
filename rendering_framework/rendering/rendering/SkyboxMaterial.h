@@ -17,13 +17,13 @@ public:
 		int p = equirectangularPath.find_last_of('/');
 		int dotp = equirectangularPath.find_last_of('.');
 		_rootPath = equirectangularPath.substr(0, p);
-		_rootName = equirectangularPath.substr(p + 1, dotp-p-1);
+		_rootName = equirectangularPath.substr(p + 1, dotp - p - 1);
 		string skyboxPath = _rootPath + "/skybox";
-		if (_access(skyboxPath.c_str(), 0)==0) {
+		if (_access(skyboxPath.c_str(), 0) == 0) {
 			loadTextures(skyboxPath, _rootName, "hdr");
 			return;
 		}
-		unsigned int id=genEnvmap(equirectangularPath);
+		unsigned int id = genEnvmap(equirectangularPath);
 		Texture t = Texture(id, "envCubemap", GL_TEXTURE_CUBE_MAP);
 		textureList.push_back(t);
 		SaveEnvCubemap();

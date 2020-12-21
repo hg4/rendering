@@ -6,7 +6,7 @@
 
 Mesh::Mesh(vector<Vertex>& _v, vector<unsigned int>& _i, vector<Texture>& _t, vector<Tangent> &_tg)
 {
-	material = shared_ptr<Material>(new Material());
+	material = (new Material());
 	_useEBO = true;
 	_useTangent = true;
 	_primitiveType = GL_TRIANGLES;
@@ -19,7 +19,7 @@ Mesh::Mesh(vector<Vertex>& _v, vector<unsigned int>& _i, vector<Texture>& _t, ve
 }
 
 Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> &_i, vector<Texture> &_t, GLenum _gl_type) {
-	material = shared_ptr<Material>(new Material());
+	material = (new Material());
 	_useEBO = true;
 	_useTangent = false;
 	_primitiveType = _gl_type;
@@ -31,15 +31,15 @@ Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> &_i, vector<Texture> &_t, GL
 }
 //只能用于三角形类型的接口，不能画line
 Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length) :Mesh(_pos, _norm, _tex, _length, false, NULL, 0, GL_TRIANGLES) {
-	material = shared_ptr<Material>(new Material());
+
 }
 Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length, unsigned int * _indices, int _indice_length) :
 	Mesh(_pos, _norm, _tex, _length, true, _indices, _indice_length, GL_TRIANGLES) {
-	material = shared_ptr<Material>(new Material());
+
 }
 Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length,
 	bool _use_ebo, unsigned int * _indices, int _indices_length, GLenum _gl_type) {
-	material = shared_ptr<Material>(new Material());
+	material = (new Material());
 	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
@@ -74,7 +74,7 @@ Mesh::Mesh(float * _vertices,
 	int _indices_length,
 	GLenum _gl_type)
 {
-	material = shared_ptr<Material>(new Material());
+	material = (new Material());
 	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
@@ -99,7 +99,7 @@ Mesh::Mesh(float * _vertices,
 	int _length,
 	int _vertex_size) :Mesh(_vertices, _length, _vertex_size, false, nullptr, 0, GL_TRIANGLES)
 {
-	material = shared_ptr<Material>(new Material());
+	
 }
 
 Mesh::Mesh(vector<float>& _vertices,
@@ -108,13 +108,13 @@ Mesh::Mesh(vector<float>& _vertices,
 	GLenum _gl_type)
 	:Mesh(_vertices.data(), _vertices.size(), _vertex_size, true, _indices.data(), _indices.size(), _gl_type)
 {
-	material = shared_ptr<Material>(new Material());
+
 }
 
 Mesh::Mesh(vector<float> &_vertices,
 	int _vertex_size) :Mesh(_vertices, _vertex_size, vector<unsigned int>(), GL_TRIANGLES)
 {
-	material = shared_ptr<Material>(new Material());
+
 }
 void Mesh::setMVP(mat4 model, mat4 view, mat4 projection) {
 	mvp = MVPTransform(model, view, projection);
@@ -128,7 +128,7 @@ void Mesh::ClearTextures() {
 
 void Mesh::setMaterial(Material * mtr)
 {
-	material.reset(mtr);
+	material=(mtr);
 	/*cout << mtr->textureList.size() << " " << material->textureList.size() << endl;*/
 }
 
