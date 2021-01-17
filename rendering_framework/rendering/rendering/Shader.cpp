@@ -4,7 +4,7 @@
 #include <sstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include "PointLight.h"
 Shader::Shader()
 {
 }
@@ -116,8 +116,14 @@ void Shader::setMVPTransform(MVPTransform & mvp)
 	setUniform("transpose_inverse_model", mvp.transpose_inverse_model);
 }
 
-void Shader::setLight(Light & l)
+void Shader::setLight(shared_ptr<Light> l,int index)
 {
 	use();
-
+	l->AddLightInShader(shared_from_this(),index);
+	/*if (l->lightType == LIGHTTYPE::POINT) {
+		setUniform("light_" + to_string(index) + ".type", 0);
+		setUniform("light_" + to_string(index) + ".position", l->position);
+		setUniform("light_" + to_string(index) + ".color", l->color);
+		setUniform("light_" + to_string(index) + ".attenuation", (shared_ptr<PointLight>)l->attenuation);
+	}*/
 }

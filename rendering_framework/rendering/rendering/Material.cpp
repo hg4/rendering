@@ -1,8 +1,8 @@
 #include "Material.h"
 
-void Material::BindShader(Shader &s)
+void Material::BindShader(shared_ptr<Shader> s)
 {
-	shader = shared_ptr<Shader>(&s);
+	shader = s;
 	hasBindShader = true;
 }
 

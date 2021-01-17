@@ -32,9 +32,9 @@ bool SkyboxMaterial::loadTextures(const string & root_path, const string & root_
 
 unsigned int SkyboxMaterial::genEnvmap(const string& equirectangularPath) {
 
-	MVPTransform* mvp = GenMVP();
-	BufferElement * be = BufferManager::genBindFRBOBuffer(size, size);
-	Shader equirectangularToCubemapShader("./shader/cube_generator.vs", "./shader/cube_generator.fs");
+	unique_ptr<MVPTransform[]> mvp = GenMVP();
+	shared_ptr<BufferElement> be = BufferManager::genBindFRBOBuffer(size, size);
+	shared_ptr<Shader> equirectangularToCubemapShader(new Shader("./shader/cube_generator.vs", "./shader/cube_generator.fs"));
 	Texture hdr = TextureLoader::loadTexture2D(equirectangularPath.c_str(),
 		"equirectangularMap",
 		GL_FLOAT,
@@ -85,7 +85,7 @@ void SkyboxMaterial::SaveEnvCubemap()
 }
 
 
-MVPTransform * SkyboxMaterial::GenMVP()
+unique_ptr<MVPTransform[]> SkyboxMaterial::GenMVP()
 {
 	glm::mat4 model = glm::mat4(1.0);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -98,7 +98,7 @@ MVPTransform * SkyboxMaterial::GenMVP()
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 	};
-	MVPTransform * mvp_arr = new MVPTransform[6];
+	unique_ptr<MVPTransform[]> mvp_arr = unique_ptr<MVPTransform[]>(new MVPTransform[6]);
 	for (int i = 0; i < 6; i++) {
 		mvp_arr[i] = MVPTransform(model, views[i], projection);
 	}

@@ -7,7 +7,7 @@ class PbrEnvMaterial :
 {
 public:
 	PbrEnvMaterial();
-	PbrEnvMaterial(SkyboxMaterial * skybox) {
+	PbrEnvMaterial(shared_ptr<SkyboxMaterial> skybox) {
 		_skybox = skybox;
 		string rootPath = _skybox->GetRootPath();
 		string rootName = _skybox->GetRootName();
@@ -20,9 +20,9 @@ public:
 		}
 
 		Texture t=skybox->textureList[ENVCUBEMAP];
-		MVPTransform * mvp = GenMVP();
-		Texture prefilterMap = Texture(GenPrefilterMap(mvp, t.id), "prefilterMap", GL_TEXTURE_CUBE_MAP);
-		Texture irradianceMap = Texture(GenIrradianceMap(mvp,t.id), "irradianceMap", GL_TEXTURE_CUBE_MAP);
+		//MVPTransform * mvp = GenMVP();
+		Texture prefilterMap = Texture(GenPrefilterMap(t.id), "prefilterMap", GL_TEXTURE_CUBE_MAP);
+		Texture irradianceMap = Texture(GenIrradianceMap(t.id), "irradianceMap", GL_TEXTURE_CUBE_MAP);
 		
 		Texture LUT = Texture(GenLUT(), "brdfLUT", GL_TEXTURE_2D);
 	
@@ -43,12 +43,12 @@ public:
 	unsigned int irradianceSize = 32;
 	unsigned int lutSize = 512;
 private:
-	MVPTransform* GenMVP();
-	unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int envCubemap);
-	unsigned int PbrEnvMaterial::GenIrradianceMap(MVPTransform *mvp, unsigned int envCubemap);
+	unique_ptr<MVPTransform[]> GenMVP();
+	unsigned int PbrEnvMaterial::GenPrefilterMap(unsigned int envCubemap);
+	unsigned int PbrEnvMaterial::GenIrradianceMap(unsigned int envCubemap);
 	unsigned int PbrEnvMaterial::GenLUT();
 	void SavePbrEnv();
-	SkyboxMaterial * _skybox;
+	shared_ptr<SkyboxMaterial> _skybox;
 	uint _maxMipLevels = 5;
 };
 

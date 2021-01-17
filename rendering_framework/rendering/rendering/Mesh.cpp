@@ -6,7 +6,7 @@
 
 Mesh::Mesh(vector<Vertex>& _v, vector<unsigned int>& _i, vector<Texture>& _t, vector<Tangent> &_tg)
 {
-	material = (new Material());
+	material = shared_ptr<Material>(new Material());
 	_useEBO = true;
 	_useTangent = true;
 	_primitiveType = GL_TRIANGLES;
@@ -19,7 +19,7 @@ Mesh::Mesh(vector<Vertex>& _v, vector<unsigned int>& _i, vector<Texture>& _t, ve
 }
 
 Mesh::Mesh(vector<Vertex> &_v, vector<unsigned int> &_i, vector<Texture> &_t, GLenum _gl_type) {
-	material = (new Material());
+	material = shared_ptr<Material>(new Material());
 	_useEBO = true;
 	_useTangent = false;
 	_primitiveType = _gl_type;
@@ -39,7 +39,7 @@ Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length, unsigned int * 
 }
 Mesh::Mesh(float * _pos, float *_norm, float *_tex, int _length,
 	bool _use_ebo, unsigned int * _indices, int _indices_length, GLenum _gl_type) {
-	material = (new Material());
+	material =shared_ptr<Material>(new Material());
 	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
@@ -74,7 +74,7 @@ Mesh::Mesh(float * _vertices,
 	int _indices_length,
 	GLenum _gl_type)
 {
-	material = (new Material());
+	material = shared_ptr<Material>(new Material());
 	_useTangent = false;
 	_useEBO = _use_ebo;
 	_primitiveType = _gl_type;
@@ -116,6 +116,8 @@ Mesh::Mesh(vector<float> &_vertices,
 {
 
 }
+
+
 void Mesh::setMVP(mat4 model, mat4 view, mat4 projection) {
 	mvp = MVPTransform(model, view, projection);
 }
@@ -126,9 +128,9 @@ void Mesh::ClearTextures() {
 	material->textureList.clear();
 }
 
-void Mesh::setMaterial(Material * mtr)
+void Mesh::setMaterial(shared_ptr<Material> mtr)
 {
-	material=(mtr);
+	material = mtr;
 	/*cout << mtr->textureList.size() << " " << material->textureList.size() << endl;*/
 }
 

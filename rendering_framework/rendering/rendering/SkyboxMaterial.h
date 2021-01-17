@@ -34,7 +34,7 @@ public:
 	string GetRootName() { return _rootName; }
 private:
 	string _rootPath,_rootName;
-	MVPTransform* GenMVP();
+	unique_ptr<MVPTransform[]> GenMVP();
 	unsigned int genEnvmap(const string& equirectangularPath);
 	void SaveEnvCubemap();
 	

@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 using namespace glm;
 using namespace std;
 
@@ -13,21 +14,21 @@ using namespace std;
 
 class WindowManager {
 public:
-	static Camera * camera_;
+	static shared_ptr<Camera> camera_;
 	static bool firstMouse_;
 	static float lastX_, lastY_;
 	WindowManager() {
 		windowInit(1024, 1024, "", 3, 3);
-		camera_ = new Camera(vec3(0.0, 0.0, -1.0));
+		camera_ = shared_ptr<Camera>(new Camera(vec3(0.0, 0.0, -1.0)));
 		callbackRegister();
 	}
 	WindowManager(int height, int width, vec3 cam_pos, char * title = "MyViewer", unsigned int major_version = 3, unsigned int minor_version = 3) {
 		windowInit(height, width, title, major_version, minor_version);
-		camera_ = new Camera(cam_pos);
+		camera_ = shared_ptr<Camera>(new Camera(cam_pos));
 		callbackRegister();
 	}
 	~WindowManager() {
-		delete camera_;
+		delete window_;
 	}
 	typedef void(*mainloop)(void);
 	void WindowLoop(mainloop) {
@@ -36,7 +37,7 @@ public:
 		}
 	}
 	GLFWwindow * getWindow() { return window_; }
-	Camera * getCamera() { return camera_; }
+	shared_ptr<Camera>  getCamera() { return camera_; }
 private:
 	GLFWwindow * window_;
 
@@ -107,14 +108,16 @@ private:
 		camera_->ProcessMouseScroll(yoffset);
 	}
 
+
 	void callbackRegister() {
 		glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
 		glfwSetCursorPosCallback(window_, mouse_callback);
 		glfwSetScrollCallback(window_, scroll_callback);
+		
 	}
 };
 
-Camera* WindowManager::camera_ = NULL;
+shared_ptr<Camera> WindowManager::camera_ = NULL;
 bool WindowManager::firstMouse_=true;
 float WindowManager::lastX_ = 0.0;
 float WindowManager::lastY_ = 0.0;

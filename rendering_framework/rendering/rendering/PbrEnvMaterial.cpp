@@ -40,33 +40,33 @@ bool PbrEnvMaterial::loadTextures(const string & root_path, const string & root_
 	return true;
 }
 
-MVPTransform* PbrEnvMaterial::GenMVP() {
+unique_ptr<MVPTransform[]> PbrEnvMaterial::GenMVP()
+{
 	glm::mat4 model = glm::mat4(1.0);
 	glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 views[] =
 	{
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 	};
-	MVPTransform * mvp_arr = new MVPTransform[6];
+	unique_ptr<MVPTransform[]> mvp_arr = unique_ptr<MVPTransform[]>(new MVPTransform[6]);
 	for (int i = 0; i < 6; i++) {
 		mvp_arr[i] = MVPTransform(model, views[i], projection);
 	}
 	return mvp_arr;
 }
 
-
-
 //todo: material and pbr preprocess
-unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int envCubemap) {
+unsigned int PbrEnvMaterial::GenPrefilterMap(unsigned int envCubemap) {
+	unique_ptr<MVPTransform[]> mvp = GenMVP();
 	unsigned int prefilterMap = TextureLoader::genEmptyTextureCubeMap(prefilterSize, prefilterSize, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, true);
 	unsigned int FBO = BufferManager::genBindFBOBuffer();
 	unsigned int RBO;
-	Shader prefilterShader("./shader/cube_generator.vs", "./shader/envmap_spec_prefilter.fs");
+	shared_ptr<Shader> prefilterShader(new Shader("./shader/cube_generator.vs", "./shader/envmap_spec_prefilter.fs"));
 	shared_ptr<Mesh> cube = Geometry::createCube();
 	
 	cube->material->BindShader(prefilterShader);
@@ -79,7 +79,7 @@ unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int en
 		RBO = BufferManager::genBindRBOBuffer(mipHeight, mipWidth);
 		glViewport(0, 0, mipWidth, mipHeight);
 		float roughness = (float)mip / (float)(_maxMipLevels - 1);
-		prefilterShader.setUniform("roughness", roughness);
+		prefilterShader->setUniform("roughness", roughness);
 		for (int i = 0; i < 6; i++) {
 			cube->setMVP(mvp[i]);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
@@ -91,10 +91,11 @@ unsigned int PbrEnvMaterial::GenPrefilterMap(MVPTransform * mvp, unsigned int en
 
 	return prefilterMap;
 }
-unsigned int PbrEnvMaterial::GenIrradianceMap(MVPTransform *mvp, unsigned int envCubemap) {
-	BufferElement* be = BufferManager::genBindFRBOBuffer(irradianceSize, irradianceSize);
+unsigned int PbrEnvMaterial::GenIrradianceMap(unsigned int envCubemap) {
+	unique_ptr<MVPTransform[]> mvp = GenMVP();
+	shared_ptr<BufferElement> be = BufferManager::genBindFRBOBuffer(irradianceSize, irradianceSize);
 	unsigned int irradianceMap = TextureLoader::genEmptyTextureCubeMap(irradianceSize, irradianceSize, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
-	Shader irradianceShader("./shader/cube_generator.vs", "./shader/envmap_preshader.fs");
+	shared_ptr<Shader> irradianceShader(new Shader("./shader/cube_generator.vs", "./shader/envmap_preshader.fs"));
 	glViewport(0, 0, irradianceSize, irradianceSize); // don't forget to configure the viewport to the capture dimensions.
 	shared_ptr<Mesh> cube = Geometry::createCube();
 	cube->material->BindShader(irradianceShader);
@@ -114,7 +115,7 @@ unsigned int PbrEnvMaterial::GenIrradianceMap(MVPTransform *mvp, unsigned int en
 unsigned int PbrEnvMaterial::GenLUT() 
 {
 	BufferManager::genBindFRBOBuffer(lutSize, lutSize);
-	Shader LUTShader("./shader/shader.vs", "./shader/lut_preshader.fs");
+	shared_ptr<Shader> LUTShader(new Shader("./shader/shader.vs", "./shader/lut_preshader.fs"));
 	unsigned int brdfLUT = TextureLoader::genEmptyTexture2D(lutSize, lutSize, GL_RGB, GL_FLOAT, GL_CLAMP_TO_EDGE, false);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT, 0);
 	glViewport(0, 0, lutSize, lutSize);

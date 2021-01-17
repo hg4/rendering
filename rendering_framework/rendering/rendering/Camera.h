@@ -19,8 +19,8 @@ enum Camera_Movement {
 };
 
 // Default camera values
-const float YAW = -85.0f;
-const float PITCH = -9.0f;
+const float YAW = -90.0f;
+const float PITCH = 0.0f;
 const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
@@ -105,7 +105,7 @@ public:
 
 		// update Front, Right and Up Vectors using the updated Euler angles
 		updateCameraVectors();
-		std::cout << Yaw << " " << Pitch << std::endl;
+		//std::cout << Yaw << " " << Pitch << std::endl;
 	}
 
 	// processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis

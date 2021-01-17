@@ -1,16 +1,17 @@
 #pragma once
 #include "Material.h"
+#include <memory>
 class MaterialList :
 	public Material
 {
 public:
-	vector<Material*> materialList;
+	vector<shared_ptr<Material>> materialList;
 	MaterialList();
-	MaterialList(Material * mtr1, Material * mtr2) {
+	MaterialList(shared_ptr<Material> mtr1, shared_ptr<Material> mtr2) {
 		AddMaterial(mtr1);
 		AddMaterial(mtr2);
 	}
 	~MaterialList();
-	void AddMaterial(Material* mtr);
+	void AddMaterial(shared_ptr<Material> mtr);
 };
 

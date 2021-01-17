@@ -22,6 +22,11 @@ void Transform::SetLocalScale(vec3 s)
 	UpdateModelMatrix();
 }
 
+vec3 Transform::GetEulerAngle()
+{
+	return vec3(_localRotateX, _localRotateY, _localRotateZ);
+}
+
 void Transform::SetLocalRotate(vec3 r)
 {
 

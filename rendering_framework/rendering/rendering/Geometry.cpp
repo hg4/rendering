@@ -71,20 +71,32 @@ shared_ptr<Mesh> Geometry::createQuad()
 
 	return shared_ptr<Mesh>(new Mesh(quadVertices, 8 * 6, 8, false, NULL, 0, GL_TRIANGLES));
 }
-unsigned int Geometry::renderPlane() {
+shared_ptr<Mesh> Geometry::createPlane() {
 	unsigned int planeVAO;
 	float planeVertices[] = {
-		// positions            // normals         // texcoords
-		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
-		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+		// positions            // normals    //tangent bitangent     // texcoords
+		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f, 0.0f,0.0f,1.0f,   1.0f,  0.0f,
+		-25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,1.0f,0.0f,0.0f, 0.0f,0.0f,1.0f,   0.0f,  0.0f,
+		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,1.0f,0.0f,0.0f, 0.0f,0.0f,1.0f,   0.0f, 1.0f,
 
-		25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
-		-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
-		25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+		//25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  1.0f,  0.0f,
+		//-25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,
+		25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f, 0.0f,0.0f,1.0f, 1.0f, 1.0f
 	};
+	vector<Vertex> v;
+	vector<Tangent> t;
+	for (int i = 0; i < 6; i++) {
+		vec3 position = vec3(planeVertices[i * 14 + 0], planeVertices[i * 14 + 1], planeVertices[i * 14 + 2]);
+		vec3 normal = vec3(planeVertices[i * 14 + 3], planeVertices[i * 14 + 4], planeVertices[i * 14 + 5]);
+		vec3 tangent = vec3(planeVertices[i * 14 + 6], planeVertices[i * 14 + 7], planeVertices[i * 14 + 8]);
+		vec3 bitangent = vec3(planeVertices[i * 14 + 9], planeVertices[i * 14 + 10], planeVertices[i * 14 + 11]);
+		vec2 uv = vec2(planeVertices[i * 14 + 12],planeVertices[i * 14 + 13]);
+		v.push_back(Vertex(position, normal, uv));
+		t.push_back(Tangent(tangent, bitangent));
+	}
+	vector<unsigned int> i = { 0,1,2,0,2,3 };
 	// plane VAO
-	unsigned int planeVBO;
+	/*unsigned int planeVBO;
 	glGenVertexArrays(1, &planeVAO);
 	glGenBuffers(1, &planeVBO);
 	glBindVertexArray(planeVAO);
@@ -95,12 +107,10 @@ unsigned int Geometry::renderPlane() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));*/
 
-	glBindVertexArray(planeVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindVertexArray(0);
-	return planeVAO;
+	return shared_ptr<Mesh>(new Mesh(v, i,vector<Texture>(),t));
+	//return shared_ptr<Mesh>(new Mesh(planeVertices, 8 * 6, 8, false, nullptr, 0, GL_TRIANGLES));
 }
 shared_ptr<Mesh> Geometry::createSphere()
 {

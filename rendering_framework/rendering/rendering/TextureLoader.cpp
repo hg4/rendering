@@ -122,3 +122,47 @@ Texture TextureLoader::loadTextureCubeMapMipmap(vector<std::vector<std::string>>
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, tex_surrounding);
 	return Texture(textureID,texture_name,GL_TEXTURE_CUBE_MAP);
 }
+
+void TextureLoader::bindTextures(int width, int height, GLenum format_texture, GLenum format_data, const void* data,
+	GLenum texture_type, GLenum data_type, GLenum texture_surrounding, bool useMipmap, int index, int mipmapLevel) {
+	float BorderColor[] = { 1.0f,1.0f,1.0f,1.0f };
+	if (texture_type == GL_TEXTURE_2D) {
+		glTexImage2D(GL_TEXTURE_2D, mipmapLevel, format_texture, width, height, 0, format_data, data_type, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture_surrounding);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture_surrounding);
+		if (texture_surrounding == GL_CLAMP_TO_BORDER) {
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, BorderColor);
+		}
+		if (useMipmap) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+	}
+	else if (texture_type == GL_TEXTURE_CUBE_MAP) {
+		glTexImage2D(
+			GL_TEXTURE_CUBE_MAP_POSITIVE_X + index,
+			mipmapLevel, format_texture, width, height, 0, format_data, data_type, data
+			);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, texture_surrounding);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, texture_surrounding);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, texture_surrounding);
+		if (texture_surrounding == GL_CLAMP_TO_BORDER) {
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, BorderColor);
+		}
+		if (useMipmap) {
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		}
+		else {
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+	}
+}

@@ -5,9 +5,9 @@ using namespace std;
 
 Model::Model(shared_ptr<RenderObject> ro) {
 	init();
-	shared_ptr<RenderObject> temp(ro);
-	_renderObjList.push_back(temp);
-	renderObjDictionary[temp->name] = temp;
+	
+	_renderObjList.push_back(ro);
+	renderObjDictionary[ro->name] = ro;
 }
 
 // draws the model, and thus all its meshes
@@ -34,9 +34,14 @@ void Model::Render() {
 	}
 }
 
-void Model::SetMaterial(Material * _mtr)
+void Model::RenderByTempGlobalShader(shared_ptr<Shader> shader) {
+	for (int i = 0; i < _renderObjList.size(); i++) {
+		_renderObjList[i]->RenderByTempGlobalShader(shader);
+	}
+}
+void Model::SetMaterial(shared_ptr<Material>  _mtr)
 {
-	mtr = shared_ptr<Material>(_mtr);
+	mtr = _mtr;
 	for (int i = 0; i < _renderObjList.size(); i++)
 		_renderObjList[i]->SetMaterial(_mtr);
 }
@@ -48,6 +53,11 @@ void Model::SetParentScene(shared_ptr<Scene> s)
 	{
 		_renderObjList[i]->SetParentScene(s);
 	}
+}
+
+vector<shared_ptr<RenderObject>> Model::GetRenderObjs()
+{
+	return _renderObjList;
 }
 
 void Model::SetMVP(const mat4 & parentModel)
@@ -68,8 +78,9 @@ shared_ptr<RenderObject> Model::GetRenderObjectByName(const string & objName)
 
 void Model::init()
 {
-	parentScene = nullptr;
+	parentScene.reset();
 	mtr = nullptr;
+	type = true;
 	_updateMVP = true;
 }
 void Model::ClearRenderObjectTextures(const string & objName)
@@ -135,15 +146,19 @@ void Model::ClearRenderObjectTextures(const string & objName)
 //
 //	return textureID;
 //}
-void Model::AddRenderObject(RenderObject * r)
-{
-	AddRenderObject(shared_ptr<RenderObject>(r));
-}
+
 
 void Model::AddRenderObject(shared_ptr<RenderObject> r)
 {
 	_renderObjList.push_back(r);
-	r->parent = shared_ptr<RenderObject>(this);
+	//r->parent = shared_from_this();  
+	//bad weak_ptr interupt because this function used in constructor,during this time cannot return the smart pointer.
+}
+
+void Model::SetAllParent() {
+	for (auto r : _renderObjList) {
+		r->parent = shared_from_this();
+	}
 }
 
 void Model::loadModel(string const &path)
@@ -162,6 +177,7 @@ void Model::loadModel(string const &path)
 
 	// process ASSIMP's root node recursively
 	processNode(scene->mRootNode, scene);
+	//delete scene;
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).

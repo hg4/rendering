@@ -17,11 +17,11 @@ public:
 	{
 		basicColor = vec3(0.5f, 0.5f, 0.5f);
 	}
-	Material(Shader &s)
+	Material(shared_ptr<Shader> s)
 	{
 		BindShader(s);
 	}
-	void BindShader(Shader &s);
+	void BindShader(shared_ptr<Shader> s);
 	void ActiveMaterialInShader();
 	virtual bool loadTextures(const string& root_path, const string& root_name,const string& appendix){
 		return false;

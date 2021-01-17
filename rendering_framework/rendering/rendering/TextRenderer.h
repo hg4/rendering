@@ -32,7 +32,7 @@ private:
 	std::map<GLchar, Character> _characters;
 	unsigned int VAO, VBO;
 	void FTLibPrepare();
-	Shader _s;
+	shared_ptr<Shader> _s;
 	shared_ptr<Mesh> _renderQuad;
 };
 

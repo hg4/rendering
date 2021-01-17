@@ -12,6 +12,6 @@ class Geometry {
 public:
 	static shared_ptr<Mesh> createCube();
 	static shared_ptr<Mesh> createQuad();
-	static unsigned int renderPlane();
+	static shared_ptr<Mesh> createPlane();
 	static shared_ptr<Mesh> createSphere();
 };

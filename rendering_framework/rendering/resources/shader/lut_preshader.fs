@@ -61,13 +61,15 @@ float smithG_GGX(float NdotV,float alpha){
 		return NdotV/(NdotV*(1.0-k)+k);
 }
 
+
+
 float GeometrySmith(vec3 N,vec3 V,vec3 L,float alpha){
 		float NdotV=max(dot(N,V),0.0);
 		float NdotL=max(dot(N,L),0.0);
+		//float ggx1=smithG_GGX(NdotV,alpha);
+		//float ggx2=smithG_GGX(NdotL,alpha);
 		float ggx1=smithG_GGX(NdotV,alpha);
 		float ggx2=smithG_GGX(NdotL,alpha);
-	//	float ggx1=smithG_GGX_disney(NdotV,alpha);
-	//	float ggx2=smithG_GGX_disney(NdotL,alpha);
 		return ggx1*ggx2;
 }
 

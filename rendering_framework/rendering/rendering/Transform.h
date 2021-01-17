@@ -14,6 +14,7 @@ public:
 	void SetLocalScale(vec3 s);
 	void SetLocalRotate(vec3 r);
 	void SetTranslate(vec3 t);
+	vec3 GetEulerAngle();
 	mat4 GetModel();
 private:
 	mat4 _model;

@@ -11,7 +11,7 @@ MaterialList::~MaterialList()
 {
 }
 
-void MaterialList::AddMaterial(Material * mtr)
+void MaterialList::AddMaterial(shared_ptr<Material> mtr)
 {
 	materialList.push_back(mtr);
 	for (int i = 0; i < mtr->textureList.size(); i++) {

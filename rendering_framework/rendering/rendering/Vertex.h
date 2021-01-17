@@ -7,6 +7,8 @@ using namespace glm;
 struct Tangent {
 	vec3 tangent;
 	vec3 bitangent;
+	Tangent(){}
+	Tangent(vec3 _tangent,vec3 _bitangent):tangent(_tangent),bitangent(_bitangent){}
 };
 
 class Vertex {

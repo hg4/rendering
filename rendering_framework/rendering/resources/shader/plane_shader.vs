@@ -8,6 +8,5 @@ uniform mat4 projection;
 uniform mat4 view;
 
 void main(){
-	vec4 worldPos = projection * view * model * vec4(aPos,1.0);
-    gl_Position = vec4(worldPos.xyz, 1.0); 
+	gl_Position = projection * view * model * vec4(aPos,1.0); 
 }  

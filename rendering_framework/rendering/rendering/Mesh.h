@@ -27,26 +27,26 @@ public:
 	Mesh(vector<float>& _vertices, int _vertex_size);
 	void setMVP(mat4 model, mat4 view, mat4 projection);
 	void setMVP(const MVPTransform & mvpt);
-	void setMaterial(Material * mtr);
+	void setMaterial(shared_ptr<Material> mtr);
 	void ClearTextures();
 	void addTexture(unsigned int  _id, string _name, GLenum _type);
 	//Mesh(const string path);
 	void draw();
 	void Render();
-	BufferElement* GetBufferElement() { return _be; }
+	shared_ptr<BufferElement> GetBufferElement() { return _be; }
 	vector<Vertex> vertices;
 	vector<Tangent> tangents;
 	vector<unsigned int> indices;
 	//vector<Texture> textures;
-	//shared_ptr<Material> material;
-	Material* material;
+	shared_ptr<Material> material;
+	//Material* material;
 	MVPTransform mvp;
 	Transform transform;
 private:
 	bool _useEBO,_useTangent;
 	GLenum _primitiveType;
 	int _vertex_number;//不用EBO的时候表示要画的顶点数，用EBO的时候表示indice的数量
-	BufferElement * _be;
+	shared_ptr<BufferElement> _be;
 	void init();
 
 };

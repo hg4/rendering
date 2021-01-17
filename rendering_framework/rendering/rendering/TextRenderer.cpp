@@ -1,11 +1,11 @@
 #include "TextRenderer.h"
 #include <ft2build.h>
 #include "Geometry.h"
+#include "Common.h"
 #include "MVPTransform.h"
 #include FT_FREETYPE_H  
 
-extern unsigned int SCR_WIDTH;
-extern unsigned int SCR_HEIGHT;
+
 
 shared_ptr<TextRenderer> TextRenderer::T = shared_ptr<TextRenderer>(new TextRenderer());
 
@@ -23,7 +23,7 @@ void TextRenderer::Init()
 {
 	initialized = true;
 	FTLibPrepare();
-	_s = Shader("./shader/text_shader.vs", "./shader/text_shader.fs");
+	_s=shared_ptr<Shader>(new Shader("./shader/text_shader.vs", "./shader/text_shader.fs"));
 	BufferManager::DynamicDraw(true);
 	_renderQuad = Geometry::createQuad();
 	BufferManager::DynamicDraw(false);
@@ -86,10 +86,10 @@ void TextRenderer::FTLibPrepare()
 
 void TextRenderer::RenderText(std::string text, GLfloat x, GLfloat y, GLfloat scale, vec3 color)
 {
-	_s.use();
-	_s.setUniform("textColor", color);
+	_s->use();
+	_s->setUniform("textColor", color);
 	//glActiveTexture(GL_TEXTURE0);
-	BufferElement* be = _renderQuad->GetBufferElement();
+	shared_ptr<BufferElement> be = _renderQuad->GetBufferElement();
 	glBindVertexArray(be->VAO);
 
 	// 遍历文本中所有的字符

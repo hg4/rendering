@@ -23,7 +23,7 @@ unsigned int BufferManager::genBindRBOBuffer(const int height, const int width)
 	return RBO;
 }
 
-BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, uint data_length, const Tangent * t_data, uint tan_length)
+shared_ptr<BufferElement> BufferManager::genBindVAOBuffer(const Vertex * data, uint data_length, const Tangent * t_data, uint tan_length)
 {
 	unsigned int VAO, VBO;
 	glGenVertexArrays(1, &VAO);
@@ -44,9 +44,9 @@ BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, uint data_le
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Tangent), (void*)(sizeof(Vertex)*data_length+ offsetof(Tangent, bitangent)));
 	//glBindVertexArray(0);
-	return new BufferElement(VAO, VBO, 0);
+	return shared_ptr<BufferElement>(new BufferElement(VAO, VBO, 0));
 }
-BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, const GLsizeiptr data_byte_length)
+shared_ptr<BufferElement> BufferManager::genBindVAOBuffer(const Vertex * data, const GLsizeiptr data_byte_length)
 {
 	unsigned int VAO, VBO;
 	glGenVertexArrays(1, &VAO);
@@ -68,13 +68,13 @@ BufferElement* BufferManager::genBindVAOBuffer(const Vertex * data, const GLsize
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));*/
 	//finish VAO binding
 	//glBindVertexArray(0);
-	return new BufferElement(VAO,VBO,0);
+	return shared_ptr<BufferElement>(new BufferElement(VAO,VBO,0));
 }
-BufferElement * BufferManager::genBindEBOBuffer(const Vertex * vertex_data, uint v_length, const unsigned int * indice_data, uint i_length, const Tangent * tan_data, uint tan_length)
+shared_ptr<BufferElement> BufferManager::genBindEBOBuffer(const Vertex * vertex_data, uint v_length, const unsigned int * indice_data, uint i_length, const Tangent * tan_data, uint tan_length)
 {
 	unsigned int EBO;
 
-	BufferElement* be = genBindVAOBuffer(vertex_data, v_length,tan_data,tan_length);
+	shared_ptr<BufferElement> be = genBindVAOBuffer(vertex_data, v_length,tan_data,tan_length);
 	bind(GL_ARRAY_BUFFER, be);
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -84,11 +84,11 @@ BufferElement * BufferManager::genBindEBOBuffer(const Vertex * vertex_data, uint
 	return be;
 }
 
-BufferElement* BufferManager::genBindEBOBuffer(const Vertex * vertex_data, const GLsizeiptr vertex_data_byte_length, const unsigned int * indice_data, const GLsizeiptr indice_data_byte_length)
+shared_ptr<BufferElement> BufferManager::genBindEBOBuffer(const Vertex * vertex_data, const GLsizeiptr vertex_data_byte_length, const unsigned int * indice_data, const GLsizeiptr indice_data_byte_length)
 {
 	unsigned int EBO;
 
-	BufferElement* be = genBindVAOBuffer(vertex_data, vertex_data_byte_length);
+	shared_ptr<BufferElement> be = genBindVAOBuffer(vertex_data, vertex_data_byte_length);
 	bind(GL_ARRAY_BUFFER, be);
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -98,7 +98,7 @@ BufferElement* BufferManager::genBindEBOBuffer(const Vertex * vertex_data, const
 	return be;
 }
 
-BufferElement* BufferManager::genBindFRBOBuffer(const int height, const int width)
+shared_ptr<BufferElement> BufferManager::genBindFRBOBuffer(const int height, const int width)
 {
 	unsigned int FBO, RBO;
 	//glGenFramebuffers(1, &FBO);
@@ -111,16 +111,16 @@ BufferElement* BufferManager::genBindFRBOBuffer(const int height, const int widt
 	//glBindFramebuffer(GL_FRAMEBUFFER,0);
 	FBO=genBindFBOBuffer();
 	RBO = genBindRBOBuffer(height, width);
-	return new BufferElement(FBO, RBO);
+	return shared_ptr<BufferElement>(new BufferElement(FBO, RBO));
 }
 
-void BufferManager::bind(GLenum type,BufferElement * ele)
+void BufferManager::bind(GLenum type, shared_ptr<BufferElement> ele)
 {
 	if (type == GL_ARRAY_BUFFER) glBindVertexArray(ele->VAO);
 	else if (type == GL_FRAMEBUFFER) glBindFramebuffer(type,ele->FBO);
 }
 
-void BufferManager::unbind(GLenum type, BufferElement * ele)
+void BufferManager::unbind(GLenum type, shared_ptr<BufferElement> ele)
 {
 	if (type == GL_ARRAY_BUFFER) glBindVertexArray(0);
 	else if (type == GL_FRAMEBUFFER) glBindFramebuffer(GL_FRAMEBUFFER, 0);
