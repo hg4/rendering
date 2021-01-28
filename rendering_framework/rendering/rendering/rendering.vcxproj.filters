@@ -184,12 +184,6 @@
     <None Include="..\resources\shader\shader.fs">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="..\resources\shader\heightmap_shader.fs">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="..\resources\shader\heightmap_shader.vs">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="..\resources\shader\shadow_mapping.vs">
       <Filter>资源文件</Filter>
     </None>
@@ -236,6 +230,15 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="..\resources\shader\plane_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\pbr_shader.vs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\cloth_pbr_shader.fs">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\resources\shader\phong_shader.fs">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

@@ -14,12 +14,12 @@ public:
 	Shader(const char * vertex_shader_path,const char * fragment_shader_path);
 	~Shader();
 	void use();
-	void setUniform(const std::string &name, float value) const;
-	void setUniform(const std::string &name, int value) const;
-	void setUniform(const std::string &name, bool value) const;
-	void setUniform(const std::string &name, glm::vec3 value) const;
-	void setUniform(const std::string &name, glm::vec4 value) const;
-	void setUniform(const std::string &name, glm::mat4 &mat) const;
+	void setUniform(const std::string &name, float value);
+	void setUniform(const std::string &name, int value);
+	void setUniform(const std::string &name, bool value);
+	void setUniform(const std::string &name, glm::vec3 value);
+	void setUniform(const std::string &name, glm::vec4 value);
+	void setUniform(const std::string &name, glm::mat4 &mat);
 	void setCameraPosition(glm::vec3 value, const std::string& name = "viewPos");
 	void setMVPTransform(MVPTransform& mvp);
 	void setLight(shared_ptr<Light> l,int index);

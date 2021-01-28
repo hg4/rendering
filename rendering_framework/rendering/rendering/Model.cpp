@@ -88,6 +88,7 @@ void Model::ClearRenderObjectTextures(const string & objName)
 	shared_ptr<RenderObject> ro = renderObjDictionary[objName];
 	ro->mtr->textureList.clear();
 }
+
 //void Model::Scale(vec3 s)
 //{
 //	transform->SetLocalScale(s);

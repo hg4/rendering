@@ -50,7 +50,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 glm::vec3 lightPos(-2.0f, 4.0f, -1.0f);
 // meshes
-
+float sheen = 0.04f;
 int index = 0;
 WindowManager* window_manager;
 GlobalControl global;
@@ -88,15 +88,17 @@ void ShowFPS() {
 }
 shared_ptr<Scene> ComposeScene() {
 	shared_ptr<Scene> myScene(new Scene());
-
-	shared_ptr<Shader> shader(new Shader("./shader/heightmap_shader.vs", "./shader/pbr_shader.fs"));
+	shared_ptr<Shader> clothShader(new Shader("./shader/pbr_shader.vs", "./shader/cloth_pbr_shader.fs"));
+	shared_ptr<Shader> shader(new Shader("./shader/pbr_shader.vs", "./shader/pbr_shader.fs"));
 	shared_ptr<Shader> backgroundShader(new Shader("./shader/cubemap_shader.vs", "./shader/cubemap_shader.fs"));
 	shared_ptr<Shader> quadShader(new Shader("./shader/plane_shader.vs", "./shader/plane_shader.fs"));
+	shared_ptr<Shader> phongShader(new Shader("./shader/pbr_shader.vs", "./shader/phong_shader.fs"));
 	// load textures
 	// -------------
 	string model_name = "bamboo_wood_semigloss";
 	string model_path = "./model/" + model_name;
 	string gunModel = "./model/Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX";
+
 	shared_ptr<Model> md(new Model(gunModel,"Cerberus_LP"));
 	string texture_path = "./model/Cerberus_by_Andrew_Maximov/Textures";
 	shared_ptr<PbrMaterial> pbrPlaneMaterial(new PbrMaterial(model_path.c_str(), model_name.c_str(), "png"));
@@ -128,13 +130,32 @@ shared_ptr<Scene> ComposeScene() {
 	plane->Scale(vec3(3.0f, 3.0f, 3.0f));
 	plane->Translate(vec3(0.0f, -5.5f, 0.0f));
 
-	
-	myScene->AddRenderObject(md);
-	myScene->AddRenderObject(plane);
+	// cloth 
+	string clothModel = "./model/cloth-base-mesh/Cloth.obj";
+	string bagModel = "./model/little-natural-bag/model.dae";
+	shared_ptr<Model> cloth(new Model(clothModel, "Cloth"));
+	shared_ptr<Model> bag(new Model(bagModel, "Bag"));
+	string clothTexturePath = "./model/cloth-base-mesh/fabric_0026_4k";
+	shared_ptr<PbrMaterial> pbrClothMaterial(new PbrMaterial(clothTexturePath.c_str(), "Cloth", "jpg"));
+
+	shared_ptr<MaterialList> clothMtr(new MaterialList(pbrClothMaterial, pbrEnv));
+
+
+	clothMtr->BindShader(clothShader);
+	bag->SetMaterial(clothMtr);
+	cloth->SetMaterial(clothMtr);
+	//cloth->enableShadowEffect();
+	cloth->Scale(vec3(3.0f, 3.0f, 3.0f));
+	//cloth->Rotate(vec3(90.0f, 0.0f, 0.0f));
+	cloth->Translate(vec3(0.0f, -2.0f, 0.f));
+	//myScene->AddRenderObject(bag);
+	//myScene->AddRenderObject(md);
+	myScene->AddRenderObject(cloth);
+	//myScene->AddRenderObject(plane);
 	myScene->AddRenderObject(sky);
-	shared_ptr<Light> dirL(new DirLight(vec3(0.0f, 36.0f, 10.0f), vec3(0.0f, -1.0f, -1.0f), 0.15f, vec3(0.8f, 0.5f, 0.3f)));
+	shared_ptr<Light> dirL(new DirLight(vec3(0.0f, 36.0f, 10.0f), vec3(0.0f, -1.0f, -1.0f), 2.f, vec3(1.0f, 1.0f, 1.0f)));
 	myScene->mainLight = dirL;
-	myScene->AddLight(shared_ptr<Light>(new PointLight(vec3(8.0f, 5.0f, -28.0f),30.0f,vec3(0.8f,0.5f,0.3f))));
+	myScene->AddLight(shared_ptr<Light>(new PointLight(vec3(8.0f, 5.0f, -28.0f),50.0f,vec3(1.0f, 1.0f, 1.0f))));
 	myScene->AddLight(dirL);
 	return myScene;
 }
@@ -243,6 +264,8 @@ int main()
 		//background->draw();
 	/*	background_cube->setMVP(mat4(1.0), view, projection);
 		background_cube->draw();*/
+
+//		s->renderList[0]->mtr->shader->setUniform("sheen", sheen);
 		s->RenderScene();
 
 		ShowFPS();
@@ -261,17 +284,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(FORWARD, deltaTime);
+		window_manager->camera_->ProcessKeyboard(FORWARD, deltaTime*3);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(BACKWARD, deltaTime);
+		window_manager->camera_->ProcessKeyboard(BACKWARD, deltaTime * 3);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(LEFT, deltaTime);
+		window_manager->camera_->ProcessKeyboard(LEFT, deltaTime * 3);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(RIGHT, deltaTime);
+		window_manager->camera_->ProcessKeyboard(RIGHT, deltaTime * 3);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(DOWN, deltaTime);
+		window_manager->camera_->ProcessKeyboard(DOWN, deltaTime * 3);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		window_manager->camera_->ProcessKeyboard(UP, deltaTime);
+		window_manager->camera_->ProcessKeyboard(UP, deltaTime * 3);
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
 		global.axis = AXIS::X;
 		cout << "x axis is selected.\n";
@@ -310,6 +333,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			euler += vec3(0.0f, 0.0f, 1.0f);
 		s->mainLight->GetTransform()->SetLocalRotate(euler);
 		cout << "light rotation. now euler angle is : " << euler.x << " " << euler.y << " " << euler.z << endl;
+	}
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
+		sheen += 0.01;
+		cout << "sheen:" << sheen << endl;
 	}
 }
 

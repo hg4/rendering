@@ -133,15 +133,15 @@ vec3 sumDistribution(vec3 N,vec3 V, vec3 L,PbrData pbr, vec3 radiance,float inte
 
 void main(){
 	PbrData pbrData;
-	pbrData.albedo=texture(texture_albedo,TexCoords).rgb;
+	pbrData.albedo=pow(texture(texture_albedo,TexCoords).rgb,vec3(2.2));
 	
 	vec3 Tnormal= normalize(2 * texture(texture_normal,TexCoords).rgb - 1);
 	vec3 N=normalize(TtoW * Tnormal);
 	vec3 V=normalize(viewPos-WorldPos);
 	vec3 F0=vec3(0.04);
-	pbrData.metallic=texture(texture_metallic,TexCoords).r;
-	pbrData.roughness=texture(texture_roughness,TexCoords).r;
-	pbrData.ao=texture(texture_ao,TexCoords).r;
+	pbrData.metallic=pow(texture(texture_metallic,TexCoords).r,2.2);
+	pbrData.roughness=pow(texture(texture_roughness,TexCoords).r,2.2);
+	pbrData.ao=pow(texture(texture_ao,TexCoords).r,2.2);
 	pbrData.F0=mix(F0,pbrData.albedo,pbrData.metallic);
 	vec3 result=vec3(0.0);
 	float NdotV=max(dot(N,V),0.0);
